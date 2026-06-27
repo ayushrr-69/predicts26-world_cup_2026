@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Require authentication for all access
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if the user is modifying their own document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // users collection: Publicly readable for leaderboards, writable only by the owner
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    // predictions collection: Publicly readable for viewing brackets, writable only by the owner
+    match /predictions/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    // leagues collection:
+    // - readable by authenticated users
+    // - creatable by authenticated users
+    // - updatable by authenticated users (joining/leaving)
+    // - deletable by authenticated users (when empty or by creator)
+    match /leagues/{leagueId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+  }
+}

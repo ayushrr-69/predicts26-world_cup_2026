@@ -1,0 +1,269 @@
+import type { Team } from '../components/MatchCard';
+
+export interface ApiMatch {
+  id: string;
+  round: string;
+  teamA: Team | null;
+  teamB: Team | null;
+  status: 'FT' | 'Live' | 'Upcoming' | 'TBD';
+  actualScoreA?: string;
+  actualScoreB?: string;
+  /** ISO date string, e.g. "2026-06-29" */
+  date?: string;
+}
+
+/**
+ * Candidate URLs tried in order — first valid response wins.
+ * The direct API returns Access-Control-Allow-Origin: * so the browser
+ * can call it without a proxy. allorigins is a backup in case of downtime.
+ */
+const API_ENDPOINTS = [
+  { url: 'https://worldcup26.ir/get/games', wrap: false },
+  { url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://worldcup26.ir/get/games'), wrap: true },
+];
+
+// Map English country names (from API) → our internal 3-letter codes
+const NAME_TO_CODE: Record<string, string> = {
+  'Mexico': 'MEX',
+  'South Africa': 'RSA',
+  'South Korea': 'KOR',
+  'Czech Republic': 'CZE',
+  'Canada': 'CAN',
+  'Bosnia and Herzegovina': 'BIH',
+  'Australia': 'AUS',
+  'Turkey': 'TUR',
+  'Qatar': 'QAT',
+  'Switzerland': 'SUI',
+  'United States': 'USA',
+  'Paraguay': 'PAR',
+  'Germany': 'GER',
+  'Curaçao': 'CUW',
+  'Sweden': 'SWE',
+  'Tunisia': 'TUN',
+  'Netherlands': 'NED',
+  'Japan': 'JPN',
+  'France': 'FRA',
+  'Senegal': 'SEN',
+  'Iraq': 'IRQ',
+  'Norway': 'NOR',
+  'England': 'ENG',
+  'Croatia': 'CRO',
+  'Ghana': 'GHA',
+  'Panama': 'PAN',
+  'Morocco': 'MAR',
+  'Haiti': 'HAI',
+  'Scotland': 'SCO',
+  'Spain': 'ESP',
+  'Cape Verde': 'CPV',
+  'Saudi Arabia': 'KSA',
+  'Uruguay': 'URU',
+  'Belgium': 'BEL',
+  'Egypt': 'EGY',
+  'Iran': 'IRN',
+  'New Zealand': 'NZL',
+  'Brazil': 'BRA',
+  'Portugal': 'POR',
+  'Democratic Republic of the Congo': 'COD',
+  'Colombia': 'COL',
+  'Uzbekistan': 'UZB',
+  'Argentina': 'ARG',
+  'Algeria': 'ALG',
+  'Austria': 'AUT',
+  'Jordan': 'JOR',
+  'Ivory Coast': 'CIV',
+  'Ecuador': 'ECU',
+};
+
+// Round type mapping from API "type" field → our internal round label
+const TYPE_TO_ROUND: Record<string, string> = {
+  r32: 'R32',
+  r16: 'R16',
+  qf: 'QF',
+  sf: 'SF',
+  final: 'Final',
+  third: 'Third',
+};
+
+function makeTeam(nameEn: string): Team | null {
+  if (!nameEn) return null;
+  const code = NAME_TO_CODE[nameEn];
+  if (!code) return null;
+  return { name: nameEn, code, colorKey: code.toLowerCase() };
+}
+
+// Map World Cup 2026 Stadium IDs to their respective Summer local offsets (in UTC format)
+const STADIUM_OFFSETS: Record<string, string> = {
+  '1': '-06:00', // Estadio Azteca (Mexico City) - CST (UTC-6)
+  '2': '-06:00', // Estadio Akron (Guadalajara) - CST (UTC-6)
+  '3': '-06:00', // Estadio BBVA (Monterrey) - CST (UTC-6)
+  '4': '-05:00', // AT&T Stadium (Dallas) - CDT (UTC-5)
+  '5': '-05:00', // NRG Stadium (Houston) - CDT (UTC-5)
+  '6': '-05:00', // Arrowhead Stadium (Kansas City) - CDT (UTC-5)
+  '7': '-04:00', // Mercedes-Benz Stadium (Atlanta) - EDT (UTC-4)
+  '8': '-04:00', // Hard Rock Stadium (Miami) - EDT (UTC-4)
+  '9': '-04:00', // Gillette Stadium (Boston) - EDT (UTC-4)
+  '10': '-04:00', // Lincoln Financial Field (Philadelphia) - EDT (UTC-4)
+  '11': '-04:00', // MetLife Stadium (New York/New Jersey) - EDT (UTC-4)
+  '12': '-04:00', // BMO Field (Toronto) - EDT (UTC-4)
+  '13': '-07:00', // BC Place (Vancouver) - PDT (UTC-7)
+  '14': '-07:00', // Lumen Field (Seattle) - PDT (UTC-7)
+  '15': '-07:00', // Levi's Stadium (San Francisco) - PDT (UTC-7)
+  '16': '-07:00', // SoFi Stadium (Los Angeles) - PDT (UTC-7)
+};
+
+/** Parse "MM/DD/YYYY HH:MM" + stadiumId → ISO datetime string with proper local offset */
+function parseLocalDate(localDate: string, stadiumId?: string): string | undefined {
+  if (!localDate) return undefined;
+  const [datePart, timePart = '12:00'] = localDate.split(' ');
+  const [mm, dd, yyyy] = datePart.split('/');
+  if (!mm || !dd || !yyyy) return undefined;
+  const [hh, min] = timePart.split(':');
+  const pad = (s: string) => s.padStart(2, '0');
+  
+  // Look up offset for the stadium (fallback to New York -04:00 if undefined)
+  const offset = stadiumId ? (STADIUM_OFFSETS[stadiumId] ?? '-04:00') : '-04:00';
+  return `${yyyy}-${pad(mm)}-${pad(dd)}T${pad(hh || '12')}:${pad(min || '00')}:00${offset}`;
+}
+
+/**
+ * Format a date to human-readable format.
+ * If time is present, converts it to the user's local timezone (e.g., IST)
+ * and formats as "Jun 28, 5:30 PM". Otherwise, falls back to date-only "Jun 28".
+ */
+export function formatMatchDate(dateVal?: string): string {
+  if (!dateVal) return 'TBA';
+  // Already formatted like "Jun 29" — return as-is
+  if (/^[A-Za-z]{3}\s+\d{1,2}$/.test(dateVal.trim())) return dateVal.trim();
+  
+  const hasTime = dateVal.includes('T');
+  const d = new Date(hasTime ? dateVal : dateVal + 'T12:00:00Z');
+  if (isNaN(d.getTime())) return 'TBA';
+
+  if (hasTime) {
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'Asia/Kolkata' });
+    const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
+    return `${dateStr}, ${timeStr} IST`;
+  } else {
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  }
+}
+
+
+/** Attempt each URL in order; return the first that returns a valid {games:[]} response */
+async function fetchApiData(): Promise<{ games: any[] } | null> {
+  for (const endpoint of API_ENDPOINTS) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      
+      // Bust cache for proxies
+      const targetUrl = endpoint.wrap 
+        ? endpoint.url + encodeURIComponent(`?t=${Date.now()}`)
+        : endpoint.url;
+
+      const response = await fetch(targetUrl, {
+        headers: { Accept: 'application/json' },
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (!response.ok) continue;
+      let json = await response.json();
+      // allorigins wraps response in {contents: "<json string>"}
+      if (endpoint.wrap && json?.contents) json = JSON.parse(json.contents);
+      if (json && Array.isArray(json.games)) return json;
+    } catch {
+      // try next endpoint
+    }
+  }
+  return null;
+}
+
+// --- DATA CORRECTION LAYER ---
+// The free worldcup26.ir API occasionally makes group assignment mistakes (e.g. placing Belgium in M80 instead of M82).
+// This dictionary allows us to intercept the raw API data and forcefully correct specific matches before they hit the UI.
+const MATCH_OVERRIDES: Record<string, { home_team_name_en?: string; away_team_name_en?: string; home_team_id?: string; away_team_id?: string }> = {
+  '80': { home_team_id: '0', home_team_name_en: '' }, // Clear Belgium from M80
+  '82': { home_team_id: '25', home_team_name_en: 'Belgium' } // Force Belgium into M82
+};
+
+/** Transform a raw API game object → ApiMatch */
+function transformGame(g: any): ApiMatch {
+  // Apply manual overrides if they exist for this match
+  const override = MATCH_OVERRIDES[g.id];
+  if (override) {
+    if (override.home_team_name_en !== undefined) g.home_team_name_en = override.home_team_name_en;
+    if (override.home_team_id !== undefined) g.home_team_id = override.home_team_id;
+    if (override.away_team_name_en !== undefined) g.away_team_name_en = override.away_team_name_en;
+    if (override.away_team_id !== undefined) g.away_team_id = override.away_team_id;
+  }
+
+  const round = TYPE_TO_ROUND[g.type] ?? g.type.toUpperCase();
+  const teamA = g.home_team_id !== '0' && g.home_team_id !== 0
+    ? makeTeam(g.home_team_name_en)
+    : null;
+  const teamB = g.away_team_id !== '0' && g.away_team_id !== 0
+    ? makeTeam(g.away_team_name_en)
+    : null;
+
+  const isFinished = g.finished === 'TRUE';
+  const isLive = g.time_elapsed === 'live';
+  let status: ApiMatch['status'] = 'TBD';
+  if (isFinished) status = 'FT';
+  else if (isLive) status = 'Live';
+  else if (teamA || teamB) status = 'Upcoming';
+
+  return {
+    id: String(g.id),
+    round,
+    teamA,
+    teamB,
+    status,
+    actualScoreA: isFinished && g.home_score != null ? String(g.home_score) : undefined,
+    actualScoreB: isFinished && g.away_score != null ? String(g.away_score) : undefined,
+    date: parseLocalDate(g.local_date, String(g.stadium_id)),
+  };
+}
+
+export const apiService = {
+  /**
+   * Fetches all knockout round matches.
+   * Tries the live API (with CORS proxy fallback), then local matches.json.
+   */
+  async fetchAllMatches(): Promise<ApiMatch[]> {
+    // 1. Try live API
+    try {
+      const data = await fetchApiData();
+      if (data) {
+        return data.games
+          .filter((g: any) => ['r32', 'r16', 'qf', 'sf', 'final'].includes(g.type))
+          .map(transformGame);
+      }
+    } catch (err) {
+      console.warn('Live API fetch failed:', err);
+    }
+
+    // 2. Fall back to local matches.json
+    try {
+      const res = await fetch('/data/matches.json');
+      if (!res.ok) throw new Error('matches.json not found');
+      const data = await res.json();
+      return data.matches as ApiMatch[];
+    } catch {
+      return [];
+    }
+  },
+
+  /** Re-fetches for live polling, returning full match objects to update teams and scores. */
+  async fetchLiveScores(): Promise<Record<string, ApiMatch>> {
+    try {
+      const matches = await apiService.fetchAllMatches();
+      const results: Record<string, ApiMatch> = {};
+      matches.forEach((m) => {
+        results[m.id] = m;
+      });
+      return results;
+    } catch {
+      return {};
+    }
+  },
+};

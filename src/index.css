@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+@theme {
+  /* Theme Base Palette - Solid High Contrast */
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-dim: #f1f5f9;
+  --color-surface-bright: #ffffff;
+  --color-surface-container: #ffffff;
+  --color-surface-container-low: #f8fafc;
+  --color-surface-container-high: #e2e8f0;
+  --color-surface-container-highest: #cbd5e1;
+  --color-on-surface: #0f172a;
+  --color-on-surface-variant: #475569;
+  --color-outline: #0f172a;
+  --color-outline-variant: #cbd5e1;
+  
+  --color-primary: #003ec7;
+  --color-primary-container: #0052ff;
+  --color-on-primary: #ffffff;
+  
+  --color-secondary: #bb0022;
+  --color-secondary-container: #e9002d;
+  --color-on-secondary: #ffffff;
+  
+  --color-tertiary: #005b2b;
+  --color-tertiary-container: #007639;
+  --color-on-tertiary: #ffffff;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+
+  /* Soccer & Beautiful Game Accents */
+  --color-pitch-green: #10b981;
+  --color-pitch-dark-green: #065f46;
+  --color-gold-trophy: #f59e0b;
+
+  /* World Cup Country Accents */
+  --color-nation-usa: #0f172a;
+  --color-nation-usa-accent: #b31942;
+  --color-nation-ned: #ff4f00;
+  --color-nation-arg: #74acdf;
+  --color-nation-fra: #002395;
+  --color-nation-pol: #dc143c;
+  --color-nation-sen: #00853f;
+  --color-nation-eng: #e00000;
+  --color-nation-mex: #006847;
+  --color-nation-can: #ff0000;
+  --color-nation-bra: #fedf00;
+  
+  /* Fonts - High End Geometric Sans */
+  --font-sans: "Outfit", "Inter", system-ui, -apple-system, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* Custom Base Layer Styles */
+body {
+  background-color: var(--color-background);
+  font-family: var(--font-body);
+  color: var(--color-on-surface);
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+}
+
+/* Bracket Connecting Lines - Clean, Thick & Solid */
+.bracket-connector {
+  border-right: 2px solid var(--color-outline);
+  border-top: 2px solid var(--color-outline);
+  border-bottom: 2px solid var(--color-outline);
+  width: 32px;
+  position: absolute;
+  right: -32px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.bracket-connector.top { 
+  border-bottom: none; 
+  top: 50%; 
+  transform: none; 
+}
+.bracket-connector.bottom { 
+  border-top: none; 
+  bottom: 50%; 
+  top: auto; 
+  transform: none; 
+}
+.bracket-connector .bracket-line {
+  height: 2px;
+  background-color: var(--color-outline);
+  width: 32px;
+  position: absolute;
+  bottom: 0;
+  right: -32px;
+  z-index: 0;
+}
+
+/* Match Card Styles - Thick Outlines and High Contrast */
+.match-card {
+  border: 2px solid var(--color-outline);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 10;
+  background-color: var(--color-surface);
+  height: 138px; /* Fixed height for exact alignment math */
+}
+.match-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0px 0px var(--color-outline);
+}
+
+.input-score {
+  border: 2px solid var(--color-outline-variant);
+  border-radius: 4px;
+  background-color: var(--color-surface-dim);
+  text-align: center;
+  transition: all 0.15s ease;
+  width: 36px;
+  height: 32px;
+}
+.input-score:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background-color: var(--color-surface);
+}
+
+/* Custom Scroll Container */
+.scroll-container::-webkit-scrollbar {
+  height: 8px;
+}
+.scroll-container::-webkit-scrollbar-track {
+  background: var(--color-surface-dim);
+  border-radius: 4px;
+}
+.scroll-container::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+  border: 2px solid var(--color-surface-dim);
+  border-radius: 4px;
+}
+.scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--color-on-surface-variant);
+}
+
+/* Moving Flag Marquee Animations */
+@keyframes marquee-left {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marquee-right {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0%); }
+}
+.marquee-row-left {
+  display: flex;
+  width: max-content;
+  animation: marquee-left 30s linear infinite;
+}
+.marquee-row-right {
+  display: flex;
+  width: max-content;
+  animation: marquee-right 30s linear infinite;
+}
+.marquee-row-left:hover, .marquee-row-right:hover {
+  animation-play-state: paused;
+}
