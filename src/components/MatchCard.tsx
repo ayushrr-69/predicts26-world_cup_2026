@@ -68,16 +68,37 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   const isCorrect = status === 'correct';
   const isIncorrect = status === 'incorrect';
 
-  // Determine card border based on prediction correctness
+  // Determine card border based on points earned
   let borderClass = 'border-slate-950';
   let badgeColorClass = 'text-slate-500 bg-slate-100 border-slate-200';
   
-  if (isCorrect) {
-    borderClass = 'border-emerald-600 shadow-[2px_2px_0px_0px_rgba(16,185,129,1)]';
-    badgeColorClass = 'text-emerald-700 bg-emerald-50 border-emerald-200';
-  } else if (isIncorrect) {
-    borderClass = 'border-red-600 shadow-[2px_2px_0px_0px_rgba(220,38,38,1)]';
-    badgeColorClass = 'text-red-700 bg-red-50 border-red-200';
+  if (pointsEarned !== undefined && pointsEarned !== null) {
+    if (pointsEarned === 0) {
+      // Wrong prediction (0 points)
+      borderClass = 'border-red-600 shadow-[2px_2px_0px_0px_rgba(220,38,38,1)]';
+      badgeColorClass = 'text-red-700 bg-red-50 border-red-200';
+    } else if (pointsEarned === 1) {
+      // Correct winner (+1 point)
+      borderClass = 'border-yellow-500 shadow-[2px_2px_0px_0px_rgba(234,179,8,1)]';
+      badgeColorClass = 'text-yellow-700 bg-yellow-50 border-yellow-200';
+    } else if (pointsEarned === 3) {
+      // Correct winner & score (+3 points)
+      borderClass = 'border-emerald-500 shadow-[2px_2px_0px_0px_rgba(16,185,129,1)]';
+      badgeColorClass = 'text-emerald-700 bg-emerald-50 border-emerald-200';
+    } else if (pointsEarned === 4) {
+      // Correct winner & score + Bonus (+4 points)
+      borderClass = 'border-fuchsia-600 shadow-[2px_2px_0px_0px_rgba(192,38,211,1)]';
+      badgeColorClass = 'text-fuchsia-700 bg-fuchsia-50 border-fuchsia-200';
+    }
+  } else {
+    // Fallback to legacy status styling for points not calculated yet
+    if (isCorrect) {
+      borderClass = 'border-emerald-600 shadow-[2px_2px_0px_0px_rgba(16,185,129,1)]';
+      badgeColorClass = 'text-emerald-700 bg-emerald-50 border-emerald-200';
+    } else if (isIncorrect) {
+      borderClass = 'border-red-600 shadow-[2px_2px_0px_0px_rgba(220,38,38,1)]';
+      badgeColorClass = 'text-red-700 bg-red-50 border-red-200';
+    }
   }
 
   const handlePredict = (team: 'A' | 'B', val: string) => {
@@ -285,7 +306,12 @@ export const MatchCard: React.FC<MatchCardProps> = ({
           {/* Actual score status or user popularity percentage */}
           <div className="flex items-center gap-2 font-sans text-[10px] font-black uppercase tracking-wider">
             {points !== null && (
-              <span className={`px-1.5 py-0.5 rounded border-2 border-slate-950 font-mono shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] text-[9px] ${points > 0 ? 'bg-emerald-400 text-slate-950 font-black' : 'bg-red-450 text-slate-500 border-slate-300 shadow-none'}`}>
+              <span className={`px-1.5 py-0.5 rounded border-2 font-mono shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] text-[9px] ${
+                points === 4 ? 'bg-fuchsia-400 border-fuchsia-950 text-fuchsia-950 font-black' :
+                points === 3 ? 'bg-emerald-400 border-slate-950 text-slate-950 font-black' :
+                points === 1 ? 'bg-yellow-400 border-slate-950 text-slate-950 font-black' :
+                'bg-red-450 border-slate-300 text-slate-500 shadow-none'
+              }`}>
                 {points > 0 ? `+${points}` : '0'} PTS
               </span>
             )}

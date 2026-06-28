@@ -507,7 +507,24 @@ function App() {
               
               if (!isNaN(actA) && !isNaN(actB) && !isNaN(predA) && !isNaN(predB)) {
                 if (actA === predA && actB === predB) {
-                  pts += 3;
+                  // Check for sole predictor bonus
+                  let anyoneElseExact = false;
+                  if (selectedLeague) {
+                    for (const other of rawLeagueRoster) {
+                      if (other.uid === member.uid) continue;
+                      const otherPred = other.predictions?.[matchId];
+                      if (otherPred && parseInt(otherPred.scoreA) === actA && parseInt(otherPred.scoreB) === actB) {
+                        anyoneElseExact = true;
+                        break;
+                      }
+                    }
+                  }
+                  
+                  if (selectedLeague && !anyoneElseExact) {
+                    pts += 4;
+                  } else {
+                    pts += 3;
+                  }
                   exact++;
                 } else {
                   const actWin = actA > actB ? 'A' : actB > actA ? 'B' : 'D';
@@ -2722,6 +2739,41 @@ function App() {
             <div className="pb-4 border-b-2 border-slate-950">
               <h2 className="font-sans font-black text-lg text-slate-900 uppercase tracking-tight">Scoring Rules</h2>
               <p className="text-xs font-semibold text-slate-400 mt-0.5">Points are awarded based on prediction accuracy and are uniform across all rounds of the tournament.</p>
+            </div>
+
+            {/* MatchCard Visual States Demo */}
+            <div className="w-full bg-white pt-4 pb-8 flex flex-col gap-6 overflow-x-auto">
+              <h3 className="font-sans font-black text-sm text-slate-900 uppercase tracking-tight">Card Visual States</h3>
+              <div className="flex gap-6 min-w-max px-2 pt-2">
+                <div className="w-[270px] relative">
+                  <div className="absolute top-[-20px] left-0 text-[10px] font-black text-red-500 uppercase">Wrong (0 pts)</div>
+                  <MatchCard 
+                    id="demo1" teamA={{name:'USA',code:'USA',colorKey:'#000'}} teamB={{name:'Mexico',code:'MEX',colorKey:'#000'}} 
+                    scoreA="1" scoreB="0" actualScoreA="0" actualScoreB="2" status="incorrect" pointsEarned={0} isReadOnly={true}
+                  />
+                </div>
+                <div className="w-[270px] relative">
+                  <div className="absolute top-[-20px] left-0 text-[10px] font-black text-yellow-600 uppercase">Correct Winner (+1 pt)</div>
+                  <MatchCard 
+                    id="demo2" teamA={{name:'Argentina',code:'ARG',colorKey:'#000'}} teamB={{name:'Brazil',code:'BRA',colorKey:'#000'}} 
+                    scoreA="2" scoreB="0" actualScoreA="1" actualScoreB="0" status="correct" pointsEarned={1} isReadOnly={true}
+                  />
+                </div>
+                <div className="w-[270px] relative">
+                  <div className="absolute top-[-20px] left-0 text-[10px] font-black text-emerald-600 uppercase">Correct Winner & Score (+3 pts)</div>
+                  <MatchCard 
+                    id="demo3" teamA={{name:'France',code:'FRA',colorKey:'#000'}} teamB={{name:'Germany',code:'GER',colorKey:'#000'}} 
+                    scoreA="2" scoreB="1" actualScoreA="2" actualScoreB="1" status="correct" pointsEarned={3} isReadOnly={true}
+                  />
+                </div>
+                <div className="w-[270px] relative">
+                  <div className="absolute top-[-20px] left-0 text-[10px] font-black text-fuchsia-600 uppercase">Sole Predictor (+4 pts)</div>
+                  <MatchCard 
+                    id="demo4" teamA={{name:'England',code:'ENG',colorKey:'#000'}} teamB={{name:'Spain',code:'ESP',colorKey:'#000'}} 
+                    scoreA="3" scoreB="1" actualScoreA="3" actualScoreB="1" status="correct" pointsEarned={4} isReadOnly={true}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
