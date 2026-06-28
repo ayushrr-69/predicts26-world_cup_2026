@@ -2735,39 +2735,39 @@ function App() {
         )}
 
         {sidebarTab === 'rules' && (
-          <div className="bg-white rounded-2xl border-2 border-slate-950 p-6 flex flex-col gap-6 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] min-h-[500px] text-left">
-            <div className="pb-4 border-b-2 border-slate-950">
-              <h2 className="font-sans font-black text-lg text-slate-900 uppercase tracking-tight">Scoring Rules</h2>
-              <p className="text-xs font-semibold text-slate-400 mt-0.5">Points are awarded based on prediction accuracy and are uniform across all rounds of the tournament.</p>
+          <div className="bg-white rounded-2xl border-2 border-slate-950 p-6 md:p-8 flex flex-col gap-8 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] min-h-[500px] text-left">
+            <div className="pb-6 border-b-2 border-slate-950">
+              <h2 className="font-sans font-black text-2xl text-slate-900 uppercase tracking-tight">Scoring Rules</h2>
+              <p className="text-sm font-semibold text-slate-500 mt-1 max-w-2xl leading-relaxed">Points are awarded based on prediction accuracy and are uniform across all rounds of the tournament.</p>
             </div>
 
             {/* MatchCard Visual States Demo */}
-            <div className="w-full bg-white pt-4 pb-8 flex flex-col gap-6 overflow-x-auto">
-              <h3 className="font-sans font-black text-sm text-slate-900 uppercase tracking-tight">Card Visual States</h3>
-              <div className="flex gap-6 min-w-max px-2 pt-2">
+            <div className="w-full flex flex-col gap-5 overflow-x-auto pb-4 border-b-2 border-slate-100">
+              <h3 className="font-sans font-black text-base text-slate-900 uppercase tracking-tight">Card Visual States</h3>
+              <div className="flex gap-6 min-w-max pt-3 pb-2 px-1">
                 <div className="w-[270px] relative">
-                  <div className="absolute top-[-20px] left-0 text-[10px] font-black text-red-500 uppercase">Wrong (0 pts)</div>
+                  <div className="absolute top-[-22px] left-0 text-[10px] font-black text-red-500 uppercase tracking-wider">Wrong (0 pts)</div>
                   <MatchCard 
                     id="demo1" teamA={{name:'USA',code:'USA',colorKey:'#000'}} teamB={{name:'Mexico',code:'MEX',colorKey:'#000'}} 
                     scoreA="1" scoreB="0" actualScoreA="0" actualScoreB="2" status="incorrect" pointsEarned={0} isReadOnly={true}
                   />
                 </div>
                 <div className="w-[270px] relative">
-                  <div className="absolute top-[-20px] left-0 text-[10px] font-black text-yellow-600 uppercase">Correct Winner (+1 pt)</div>
+                  <div className="absolute top-[-22px] left-0 text-[10px] font-black text-yellow-500 uppercase tracking-wider">Correct Winner (+1 pt)</div>
                   <MatchCard 
                     id="demo2" teamA={{name:'Argentina',code:'ARG',colorKey:'#000'}} teamB={{name:'Brazil',code:'BRA',colorKey:'#000'}} 
                     scoreA="2" scoreB="0" actualScoreA="1" actualScoreB="0" status="correct" pointsEarned={1} isReadOnly={true}
                   />
                 </div>
                 <div className="w-[270px] relative">
-                  <div className="absolute top-[-20px] left-0 text-[10px] font-black text-emerald-600 uppercase">Correct Winner & Score (+3 pts)</div>
+                  <div className="absolute top-[-22px] left-0 text-[10px] font-black text-emerald-500 uppercase tracking-wider">Correct Winner & Score (+3 pts)</div>
                   <MatchCard 
                     id="demo3" teamA={{name:'France',code:'FRA',colorKey:'#000'}} teamB={{name:'Germany',code:'GER',colorKey:'#000'}} 
                     scoreA="2" scoreB="1" actualScoreA="2" actualScoreB="1" status="correct" pointsEarned={3} isReadOnly={true}
                   />
                 </div>
                 <div className="w-[270px] relative">
-                  <div className="absolute top-[-20px] left-0 text-[10px] font-black text-fuchsia-600 uppercase">Sole Predictor (+4 pts)</div>
+                  <div className="absolute top-[-22px] left-0 text-[10px] font-black text-fuchsia-600 uppercase tracking-wider">Sole Predictor (+4 pts)</div>
                   <MatchCard 
                     id="demo4" teamA={{name:'England',code:'ENG',colorKey:'#000'}} teamB={{name:'Spain',code:'ESP',colorKey:'#000'}} 
                     scoreA="3" scoreB="1" actualScoreA="3" actualScoreB="1" status="correct" pointsEarned={4} isReadOnly={true}
@@ -2776,64 +2776,64 @@ function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Correct Winner Card */}
-              <div className="border-2 border-slate-950 rounded-xl p-5 bg-slate-50 flex flex-col gap-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="border-2 border-slate-950 rounded-xl p-6 bg-white flex flex-col gap-4 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                 <div className="flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-lg bg-slate-950 text-white font-sans font-black text-xs flex items-center justify-center tracking-tight flex-shrink-0">
+                  <span className="w-10 h-10 rounded-lg bg-slate-950 text-white font-sans font-black text-sm flex items-center justify-center tracking-tight flex-shrink-0">
                     1P
                   </span>
-                  <h3 className="font-sans font-black text-sm text-slate-900 uppercase tracking-tight">Correct Winner</h3>
+                  <h3 className="font-sans font-black text-base text-slate-900 uppercase tracking-tight">Correct Winner</h3>
                 </div>
-                <p className="text-[11px] font-semibold text-slate-500 leading-relaxed">Predict the correct winner or result (excluding ties if clear winner is required) to earn baseline points.</p>
-                <div className="bg-white border-2 border-slate-950 rounded-lg p-2.5 text-center mt-auto shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-4">Predict the correct winner or result (excluding ties if clear winner is required) to earn baseline points.</p>
+                <div className="bg-white border-2 border-slate-950 rounded-lg py-3 px-4 text-center mt-auto shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                   <div className="font-sans font-black text-base text-slate-900 uppercase tracking-wider">1 Point</div>
                 </div>
               </div>
 
               {/* Exact Score Card */}
-              <div className="border-2 border-slate-950 rounded-xl p-5 bg-slate-50 flex flex-col gap-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="border-2 border-slate-950 rounded-xl p-6 bg-white flex flex-col gap-4 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                 <div className="flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-lg bg-amber-400 text-slate-950 border-2 border-slate-950 font-sans font-black text-xs flex items-center justify-center tracking-tight flex-shrink-0 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                  <span className="w-10 h-10 rounded-lg bg-amber-400 text-slate-950 border-2 border-slate-950 font-sans font-black text-sm flex items-center justify-center tracking-tight flex-shrink-0 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                     3P
                   </span>
-                  <h3 className="font-sans font-black text-sm text-slate-900 uppercase tracking-tight">Exact Score</h3>
+                  <h3 className="font-sans font-black text-base text-slate-900 uppercase tracking-tight">Exact Score</h3>
                 </div>
-                <p className="text-[11px] font-semibold text-slate-500 leading-relaxed">Correctly predict the exact scoreline of both teams at the end of the match.</p>
-                <div className="bg-amber-400 border-2 border-slate-950 rounded-lg p-2.5 text-center mt-auto shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-4">Correctly predict the exact scoreline of both teams at the end of the match.</p>
+                <div className="bg-amber-400 border-2 border-slate-950 rounded-lg py-3 px-4 text-center mt-auto shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-amber-300 transition-colors">
                   <div className="font-sans font-black text-base text-slate-950 uppercase tracking-wider">3 Points</div>
                 </div>
               </div>
 
               {/* Sole Predictor Card */}
-              <div className="border-2 border-slate-950 rounded-xl p-5 bg-slate-50 flex flex-col gap-4 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <div className="border-2 border-slate-950 rounded-xl p-6 bg-white flex flex-col gap-4 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                 <div className="flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-lg bg-emerald-400 text-slate-950 border-2 border-slate-950 font-sans font-black text-xs flex items-center justify-center tracking-tight flex-shrink-0 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                  <span className="w-10 h-10 rounded-lg bg-emerald-400 text-slate-950 border-2 border-slate-950 font-sans font-black text-sm flex items-center justify-center tracking-tight flex-shrink-0 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                     +1
                   </span>
-                  <h3 className="font-sans font-black text-sm text-slate-900 uppercase tracking-tight">Sole Predictor</h3>
+                  <h3 className="font-sans font-black text-base text-slate-900 uppercase tracking-tight">Sole Predictor</h3>
                 </div>
-                <p className="text-[11px] font-semibold text-slate-500 leading-relaxed">Earn a special bonus if you are the only predictor in your league to call the exact scoreline.</p>
-                <div className="bg-emerald-400 border-2 border-slate-950 rounded-lg p-2.5 text-center mt-auto shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-4">Earn a special bonus if you are the only predictor in your league to call the exact scoreline.</p>
+                <div className="bg-emerald-400 border-2 border-slate-950 rounded-lg py-3 px-4 text-center mt-auto shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-emerald-300 transition-colors">
                   <div className="font-sans font-black text-base text-slate-950 uppercase tracking-wider">+1 Bonus Point</div>
                 </div>
               </div>
 
               {/* General Rules Box */}
-              <div className="border-2 border-slate-950 rounded-xl p-5 bg-slate-50 flex flex-col gap-3 md:col-span-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                <div className="flex items-center gap-3 mb-2">
-                  <BookOpen className="w-5 h-5 text-slate-950 stroke-[2.5] flex-shrink-0" />
-                  <h3 className="font-sans font-black text-sm text-slate-900 uppercase tracking-tight">General Rules</h3>
+              <div className="border-2 border-slate-950 rounded-xl p-6 md:p-8 bg-slate-50 flex flex-col gap-4 lg:col-span-3 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] mt-2">
+                <div className="flex items-center gap-3 mb-2 pb-4 border-b-2 border-slate-200">
+                  <BookOpen className="w-6 h-6 text-slate-950 stroke-[2.5] flex-shrink-0" />
+                  <h3 className="font-sans font-black text-lg text-slate-900 uppercase tracking-tight">General Rules</h3>
                 </div>
-                <ul className="flex flex-col gap-2">
+                <ul className="flex flex-col gap-4">
                   {[
                     'Match predictions strictly lock 48 hours before that individual match\'s kickoff time.',
                     'The bracket progresses based on real-world results. You can only predict a match once the preceding real-world matches have concluded and teams are confirmed.',
                     'Tied scores in the prediction are not valid — a clear winner must be chosen for knockout progression.',
                     'The sole predictor bonus applies dynamically per active league.',
                   ].map((rule, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-[11px] font-semibold text-slate-700">
-                      <span className="w-5 h-5 rounded bg-slate-950 text-white font-black text-[10px] flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">{i + 1}</span>
+                    <li key={i} className="flex items-start gap-4 text-xs font-bold text-slate-700 leading-relaxed">
+                      <span className="w-6 h-6 rounded-md bg-slate-950 text-white font-black text-xs flex items-center justify-center flex-shrink-0 mt-0.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">{i + 1}</span>
                       {rule}
                     </li>
                   ))}
