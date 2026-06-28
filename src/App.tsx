@@ -848,7 +848,7 @@ function App() {
 
     const now = Date.now();
     const openTimeMs = kickoffMs - (48 * 60 * 60 * 1000); // Opens 48 hours prior
-    const lockTimeMs = kickoffMs - (45 * 60 * 1000); // Locks 45 minutes prior
+    const lockTimeMs = kickoffMs - (15 * 60 * 1000); // Locks 15 minutes prior
 
     if (now < openTimeMs) {
       return { 
@@ -2807,7 +2807,7 @@ function App() {
                 </div>
                 <ul className="flex flex-col gap-4">
                   {[
-                    'Match predictions open 48 hours before kickoff and strictly lock 45 minutes before the match begins.',
+                    'Match predictions open 48 hours before kickoff and strictly lock 15 minutes before the match begins.',
                     'The bracket progresses based on real-world results. You can only predict a match once the preceding real-world matches have concluded and teams are confirmed.',
                     'Tied scores in the prediction are not valid — a clear winner must be chosen for knockout progression.',
                     'The sole predictor bonus applies dynamically per active league.',
