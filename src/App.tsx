@@ -2581,29 +2581,6 @@ function App() {
               </div>
             )}
 
-            <div className="border-2 border-slate-950 rounded-xl p-5 bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <h3 className="font-sans font-black text-xs uppercase tracking-wider text-slate-400 mb-2">Account Access</h3>
-                <p className="text-sm font-semibold text-slate-600">Manage your active predictor session details securely.</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-950 text-white font-sans font-black text-xs uppercase tracking-wider rounded-lg border-2 border-slate-950 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-slate-800 transition-all select-none cursor-pointer"
-                  onClick={async () => {
-                    await authService.logOut();
-                  }}
-                >
-                  <LogOut className="w-4 h-4 stroke-[2.5]" />
-                  Log out
-                </button>
-                <button
-                  className="px-4 py-2.5 border-2 border-slate-950 rounded-lg font-sans font-black text-xs uppercase tracking-wider text-slate-900 bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-slate-50 transition-all select-none cursor-pointer"
-                  onClick={() => setProfileMenuOpen(true)}
-                >
-                  Open Profile Menu
-                </button>
-              </div>
-            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Profile Details Card */}
@@ -2714,25 +2691,25 @@ function App() {
                     ))}
                   </div>
                 </div>
-
-                <div className="pt-4 border-t border-slate-200 mt-4 flex justify-end gap-2">
-                  <button 
-                    onClick={async () => {
-                      try {
-                        await authService.updateUserProfile(settingsName, settingsUsername);
-                        setCurrentUser(prev => prev ? { ...prev, displayName: settingsName, username: settingsUsername } : null);
-                        setSettingsFeedback({ type: 'success', message: 'Profile details saved successfully!' });
-                        setTimeout(() => setSettingsFeedback(null), 4000);
-                      } catch (err: any) {
-                        setSettingsFeedback({ type: 'error', message: err.message || 'Failed to update profile' });
-                      }
-                    }}
-                    className="bg-slate-950 hover:bg-slate-900 text-white font-sans font-black px-4 py-2.5 rounded-lg text-xs uppercase tracking-wider transition-all border-2 border-slate-950 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] select-none cursor-pointer"
-                  >
-                    Save Changes
-                  </button>
-                </div>
               </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button 
+                onClick={async () => {
+                  try {
+                    await authService.updateUserProfile(settingsName, settingsUsername);
+                    setCurrentUser(prev => prev ? { ...prev, displayName: settingsName, username: settingsUsername } : null);
+                    setSettingsFeedback({ type: 'success', message: 'Profile details saved successfully!' });
+                    setTimeout(() => setSettingsFeedback(null), 4000);
+                  } catch (err: any) {
+                    setSettingsFeedback({ type: 'error', message: err.message || 'Failed to update profile' });
+                  }
+                }}
+                className="bg-slate-950 hover:bg-slate-900 text-white font-sans font-black px-6 py-3 rounded-lg text-sm uppercase tracking-wider transition-all border-2 border-slate-950 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] select-none cursor-pointer active:translate-y-[2px] active:translate-x-[2px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
+              >
+                Save Changes
+              </button>
             </div>
           </div>
         )}
