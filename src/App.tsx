@@ -464,6 +464,7 @@ function App() {
       };
       loadUserLeagues();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser]);
 
   useEffect(() => {
@@ -480,7 +481,7 @@ function App() {
       setRawLeagueRoster([]);
       setActiveLeagueMembers([]);
     }
-  }, [selectedLeague, currentUser]);
+  }, [selectedLeague, currentUser, leaguesList]);
 
   useEffect(() => {
     if (rawLeagueRoster.length > 0) {
@@ -759,6 +760,7 @@ function App() {
       }
     };
     loadFixtures();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -845,7 +847,8 @@ function App() {
     }
 
     const now = Date.now();
-    const openTimeMs = kickoffMs - (48 * 60 * 60 * 1000); // 48 hours prior
+    const openTimeMs = kickoffMs - (48 * 60 * 60 * 1000); // Opens 48 hours prior
+    const lockTimeMs = kickoffMs - (45 * 60 * 1000); // Locks 45 minutes prior
 
     if (now < openTimeMs) {
       return { 
@@ -854,7 +857,7 @@ function App() {
         openTime: new Date(openTimeMs), 
         kickoffTime: new Date(kickoffMs) 
       };
-    } else if (now >= kickoffMs) {
+    } else if (now >= lockTimeMs) {
       return { 
         locked: true, 
         reason: 'past', 
@@ -2827,7 +2830,7 @@ function App() {
                 </div>
                 <ul className="flex flex-col gap-4">
                   {[
-                    'Match predictions strictly lock 48 hours before that individual match\'s kickoff time.',
+                    'Match predictions open 48 hours before kickoff and strictly lock 45 minutes before the match begins.',
                     'The bracket progresses based on real-world results. You can only predict a match once the preceding real-world matches have concluded and teams are confirmed.',
                     'Tied scores in the prediction are not valid — a clear winner must be chosen for knockout progression.',
                     'The sole predictor bonus applies dynamically per active league.',
