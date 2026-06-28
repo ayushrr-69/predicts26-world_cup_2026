@@ -181,10 +181,7 @@ async function fetchApiData(): Promise<{ games: any[] } | null> {
 // --- DATA CORRECTION LAYER ---
 // The free worldcup26.ir API occasionally makes group assignment mistakes (e.g. placing Belgium in M80 instead of M82).
 // This dictionary allows us to intercept the raw API data and forcefully correct specific matches before they hit the UI.
-const MATCH_OVERRIDES: Record<string, { home_team_name_en?: string; away_team_name_en?: string; home_team_id?: string; away_team_id?: string }> = {
-  '80': { home_team_id: '0', home_team_name_en: '' }, // Clear Belgium from M80
-  '82': { home_team_id: '25', home_team_name_en: 'Belgium' } // Force Belgium into M82
-};
+const MATCH_OVERRIDES: Record<string, { home_team_name_en?: string; away_team_name_en?: string; home_team_id?: string; away_team_id?: string }> = {};
 
 /** Transform a raw API game object → ApiMatch */
 function transformGame(g: any): ApiMatch {
