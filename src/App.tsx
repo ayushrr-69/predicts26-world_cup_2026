@@ -186,18 +186,21 @@ function App() {
       (username.trim().toLowerCase() === currentUser.username?.trim().toLowerCase()) ||
       (username.trim().toLowerCase() === 'sophia perez')
     );
+
+    const m = [...r32Matches, ...r16Matches, ...qfMatches, ...sfMatches, finalMatch].find(x => x.id === matchId || x.apiId === matchId);
+
     if (isCurrent) {
-      const m = [...r32Matches, ...r16Matches, ...qfMatches, ...sfMatches, finalMatch].find(x => x.id === matchId || x.apiId === matchId);
       return team === 'A' ? m?.scoreA ?? '' : m?.scoreB ?? '';
     }
     
-    const member = activeLeagueMembers.find(m => 
-      (viewedUserId && m.uid === viewedUserId) ||
-      m.name?.trim().toLowerCase() === username.trim().toLowerCase() ||
-      m.username?.trim().toLowerCase() === username.trim().toLowerCase()
+    const member = activeLeagueMembers.find(memberObj => 
+      (viewedUserId && memberObj.uid === viewedUserId) ||
+      memberObj.name?.trim().toLowerCase() === username.trim().toLowerCase() ||
+      memberObj.username?.trim().toLowerCase() === username.trim().toLowerCase()
     );
     if (!member || !member.predictions) return '';
-    const p = member.predictions[matchId];
+
+    const p = (m?.apiId ? member.predictions[m.apiId] : null) || member.predictions[matchId];
     return p ? (team === 'A' ? p.scoreA : p.scoreB) : '';
   };
 
