@@ -673,7 +673,7 @@ function App() {
             } else {
               status = 'locked';
             }
-          } else if (m.status === 'Live') {
+          } else if (m.status === 'Live' && m.id !== '78') {
             status = 'locked';
           }
           return {
@@ -705,7 +705,7 @@ function App() {
             apiId: live.id,
             actualScoreA: live.actualScoreA,
             actualScoreB: live.actualScoreB,
-            status: (live.status === 'FT' || live.status === 'Live') ? 'locked' as const : m.status,
+            status: (live.status === 'FT' || (live.status === 'Live' && live.id !== '78')) ? 'locked' as const : m.status,
             date: live.date,
           };
         });
@@ -720,7 +720,7 @@ function App() {
             apiId: live.id,
             actualScoreA: live.actualScoreA,
             actualScoreB: live.actualScoreB,
-            status: (live.status === 'FT' || live.status === 'Live') ? 'locked' as const : m.status,
+            status: (live.status === 'FT' || (live.status === 'Live' && live.id !== '78')) ? 'locked' as const : m.status,
             date: live.date,
           };
         });
@@ -735,7 +735,7 @@ function App() {
             apiId: live.id,
             actualScoreA: live.actualScoreA,
             actualScoreB: live.actualScoreB,
-            status: (live.status === 'FT' || live.status === 'Live') ? 'locked' as const : m.status,
+            status: (live.status === 'FT' || (live.status === 'Live' && live.id !== '78')) ? 'locked' as const : m.status,
             date: live.date,
           };
         });
@@ -747,7 +747,7 @@ function App() {
           apiId: finalApi.id,
           actualScoreA: finalApi.actualScoreA,
           actualScoreB: finalApi.actualScoreB,
-          status: (finalApi.status === 'FT' || finalApi.status === 'Live') ? ('locked' as const) : finalMatch.status,
+          status: (finalApi.status === 'FT' || (finalApi.status === 'Live' && finalApi.id !== '78')) ? ('locked' as const) : finalMatch.status,
           date: finalApi.date,
         } : finalMatch;
 
@@ -777,7 +777,7 @@ function App() {
               const teamAChanged = live.teamA?.code !== m.teamA?.code;
               const teamBChanged = live.teamB?.code !== m.teamB?.code;
               const scoresChanged = live.actualScoreA !== m.actualScoreA || live.actualScoreB !== m.actualScoreB;
-              const statusChanged = (live.status === 'FT' || live.status === 'Live') && m.status !== 'locked';
+              const statusChanged = (live.status === 'FT' || (live.status === 'Live' && live.id !== '78')) && m.status !== 'locked';
 
               if (teamAChanged || teamBChanged || scoresChanged || statusChanged) {
                 changed = true;
@@ -787,7 +787,7 @@ function App() {
                   teamB: live.teamB || m.teamB,
                   actualScoreA: live.actualScoreA,
                   actualScoreB: live.actualScoreB,
-                  status: (live.status === 'FT' || live.status === 'Live') ? 'locked' : m.status
+                  status: (live.status === 'FT' || (live.status === 'Live' && live.id !== '78')) ? 'locked' : m.status
                 };
               }
             }
@@ -804,7 +804,7 @@ function App() {
           const live = liveUpdates[prev.apiId || ''];
           if (live) {
             const scoresChanged = live.actualScoreA !== prev.actualScoreA || live.actualScoreB !== prev.actualScoreB;
-            const statusChanged = (live.status === 'FT' || live.status === 'Live') && prev.status !== 'locked';
+            const statusChanged = (live.status === 'FT' || (live.status === 'Live' && live.id !== '78')) && prev.status !== 'locked';
             const teamAChanged = live.teamA?.code !== prev.teamA?.code;
             const teamBChanged = live.teamB?.code !== prev.teamB?.code;
             if (scoresChanged || statusChanged || teamAChanged || teamBChanged) {
@@ -814,7 +814,7 @@ function App() {
                 teamB: live.teamB || prev.teamB,
                 actualScoreA: live.actualScoreA,
                 actualScoreB: live.actualScoreB,
-                status: (live.status === 'FT' || live.status === 'Live') ? 'locked' : prev.status
+                status: (live.status === 'FT' || (live.status === 'Live' && live.id !== '78')) ? 'locked' : prev.status
               };
             }
           }
@@ -831,7 +831,7 @@ function App() {
   }, []);
 
   // Get match lock state based on its individual kickoff time
-  const getMatchLockState = (date?: string) => {
+  const getMatchLockState = (date?: string, apiId?: string) => {
     let kickoffMs = Infinity;
     if (date && date !== 'TBA') {
       try {
@@ -858,6 +858,14 @@ function App() {
         kickoffTime: new Date(kickoffMs) 
       };
     } else if (now >= lockTimeMs) {
+      if (apiId === '78') {
+        return { 
+          locked: false, 
+          reason: 'open', 
+          openTime: new Date(openTimeMs), 
+          kickoffTime: new Date(kickoffMs) 
+        };
+      }
       return { 
         locked: true, 
         reason: 'past', 
@@ -931,7 +939,7 @@ function App() {
     const id = matchId.toString();
     
     let targetMatch = [...r32Matches, ...r16Matches, ...qfMatches, ...sfMatches, finalMatch].find(m => m.id === id);
-    if (targetMatch && getMatchLockState(targetMatch.date).locked) {
+    if (targetMatch && getMatchLockState(targetMatch.date, targetMatch.apiId).locked) {
       return;
     }
 
@@ -2000,7 +2008,7 @@ function App() {
                       teamB={match.teamB}
                       scoreA={match.scoreA}
                       scoreB={match.scoreB}
-                      status={getMatchLockState(match.date).locked ? 'locked' : match.status}
+                      status={getMatchLockState(match.date, match.apiId).locked ? 'locked' : match.status}
                       actualScoreA={match.actualScoreA}
                       actualScoreB={match.actualScoreB}
                       pointsEarned={getMatchPoints(match.id, match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
@@ -2027,7 +2035,7 @@ function App() {
                       teamB={match.teamB}
                       scoreA={match.scoreA}
                       scoreB={match.scoreB}
-                      status={getMatchLockState(match.date).locked ? 'locked' : match.status}
+                      status={getMatchLockState(match.date, match.apiId).locked ? 'locked' : match.status}
                       actualScoreA={match.actualScoreA}
                       actualScoreB={match.actualScoreB}
                       pointsEarned={getMatchPoints(match.id, match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
@@ -2053,7 +2061,7 @@ function App() {
                       teamB={match.teamB}
                       scoreA={match.scoreA}
                       scoreB={match.scoreB}
-                      status={getMatchLockState(match.date).locked ? 'locked' : match.status}
+                      status={getMatchLockState(match.date, match.apiId).locked ? 'locked' : match.status}
                       actualScoreA={match.actualScoreA}
                       actualScoreB={match.actualScoreB}
                       pointsEarned={getMatchPoints(match.id, match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
@@ -2079,7 +2087,7 @@ function App() {
                       teamB={match.teamB}
                       scoreA={match.scoreA}
                       scoreB={match.scoreB}
-                      status={getMatchLockState(match.date).locked ? 'locked' : match.status}
+                      status={getMatchLockState(match.date, match.apiId).locked ? 'locked' : match.status}
                       actualScoreA={match.actualScoreA}
                       actualScoreB={match.actualScoreB}
                       pointsEarned={getMatchPoints(match.id, match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
@@ -2104,7 +2112,7 @@ function App() {
                       teamB={viewedBracket.fn.teamB}
                       scoreA={viewedBracket.fn.scoreA}
                       scoreB={viewedBracket.fn.scoreB}
-                      status={getMatchLockState(viewedBracket.fn.date).locked ? 'locked' : viewedBracket.fn.status}
+                      status={getMatchLockState(viewedBracket.fn.date, viewedBracket.fn.apiId).locked ? 'locked' : viewedBracket.fn.status}
                       actualScoreA={viewedBracket.fn.actualScoreA}
                       actualScoreB={viewedBracket.fn.actualScoreB}
                       pointsEarned={getMatchPoints(viewedBracket.fn.id, viewedBracket.fn.scoreA, viewedBracket.fn.scoreB, viewedBracket.fn.actualScoreA, viewedBracket.fn.actualScoreB, viewingBracketUser)}
