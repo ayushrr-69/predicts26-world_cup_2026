@@ -422,33 +422,6 @@ function App() {
       setSettingsName(currentUser.displayName || '');
       setSettingsUsername(currentUser.username || '');
 
-      // Load user's saved predictions from Firestore/LocalStorage
-      const loadUserSavedPredictions = async () => {
-        const saved = await authService.loadPredictions(currentUser.uid);
-        if (saved) {
-          // Update the local state for matches with saved predictions
-          const applySaved = (m: PredictionMatch) => {
-            const pred = saved[m.apiId || ''] || saved[m.id];
-            return pred ? { ...m, scoreA: pred.scoreA, scoreB: pred.scoreB } : m;
-          };
-          const loadedR32 = r32Matches.map(applySaved);
-          const loadedR16 = r16Matches.map(applySaved);
-          const loadedQF = qfMatches.map(applySaved);
-          const loadedSF = sfMatches.map(applySaved);
-          const loadedFinal = applySaved(finalMatch);
-
-          setR32Matches(loadedR32);
-          setR16Matches(loadedR16);
-          setQfMatches(loadedQF);
-          setSfMatches(loadedSF);
-          setFinalMatch(loadedFinal);
-
-          // Force calculate tree progression
-          updateProgression(loadedR32, loadedR16, loadedQF, loadedSF, loadedFinal);
-        }
-      };
-      loadUserSavedPredictions();
-      
       // Auto-sync user details to Firestore users collection in the background
       authService.updateUserProfile(currentUser.displayName, currentUser.username, currentUser.photoURL).catch(() => {});
 
@@ -645,9 +618,15 @@ function App() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
+
     const loadFixtures = async () => {
       try {
         const matches = await apiService.fetchAllMatches();
+        let saved: Record<string, any> | null = null;
+        if (currentUser) {
+          saved = await authService.loadPredictions(currentUser.uid);
+        }
 
         // Helper to sort API matches by FIFA topological layout (preserves bracket pairings)
         const R32_ORDER = ['74', '77', '73', '75', '83', '84', '81', '82', '76', '78', '79', '80', '86', '88', '85', '87'];
@@ -660,8 +639,9 @@ function App() {
         const mappedR32: PredictionMatch[] = r32Api.map((m, idx) => {
           const posId = `m${idx + 1}`;
           const existing = r32Matches.find(x => x.apiId === m.id || x.id === posId);
-          const scoreA = existing?.scoreA ?? '';
-          const scoreB = existing?.scoreB ?? '';
+          const savedPred = saved ? (saved[m.id] || saved[posId]) : null;
+          const scoreA = savedPred?.scoreA ?? existing?.scoreA ?? '';
+          const scoreB = savedPred?.scoreB ?? existing?.scoreB ?? '';
 
           let status: PredictionMatch['status'] = 'open';
           if (m.status === 'FT') {
@@ -703,9 +683,14 @@ function App() {
         const mappedR16 = r16Matches.map((m, idx) => {
           const live = r16Api[idx];
           if (!live) return m;
+          const savedPred = saved ? (saved[live.id] || saved[m.id]) : null;
+          const scoreA = savedPred?.scoreA ?? m.scoreA;
+          const scoreB = savedPred?.scoreB ?? m.scoreB;
           return {
             ...m,
             apiId: live.id,
+            scoreA,
+            scoreB,
             actualScoreA: live.actualScoreA,
             actualScoreB: live.actualScoreB,
             status: (live.status === 'FT' || live.status === 'Live') ? 'locked' as const : m.status,
@@ -718,9 +703,14 @@ function App() {
         const mappedQF = qfMatches.map((m, idx) => {
           const live = qfApi[idx];
           if (!live) return m;
+          const savedPred = saved ? (saved[live.id] || saved[m.id]) : null;
+          const scoreA = savedPred?.scoreA ?? m.scoreA;
+          const scoreB = savedPred?.scoreB ?? m.scoreB;
           return {
             ...m,
             apiId: live.id,
+            scoreA,
+            scoreB,
             actualScoreA: live.actualScoreA,
             actualScoreB: live.actualScoreB,
             status: (live.status === 'FT' || live.status === 'Live') ? 'locked' as const : m.status,
@@ -733,9 +723,14 @@ function App() {
         const mappedSF = sfMatches.map((m, idx) => {
           const live = sfApi[idx];
           if (!live) return m;
+          const savedPred = saved ? (saved[live.id] || saved[m.id]) : null;
+          const scoreA = savedPred?.scoreA ?? m.scoreA;
+          const scoreB = savedPred?.scoreB ?? m.scoreB;
           return {
             ...m,
             apiId: live.id,
+            scoreA,
+            scoreB,
             actualScoreA: live.actualScoreA,
             actualScoreB: live.actualScoreB,
             status: (live.status === 'FT' || live.status === 'Live') ? 'locked' as const : m.status,
@@ -744,15 +739,23 @@ function App() {
         });
 
         // 5. Map Final
-        const finalApi = matches.find(m => m.round === 'Final');
-        const mappedFinal = finalApi ? {
-          ...finalMatch,
-          apiId: finalApi.id,
-          actualScoreA: finalApi.actualScoreA,
-          actualScoreB: finalApi.actualScoreB,
-          status: (finalApi.status === 'FT' || finalApi.status === 'Live') ? ('locked' as const) : finalMatch.status,
-          date: finalApi.date,
-        } : finalMatch;
+        const finalApi = matches.find(m => m.round === 'FINAL');
+        let mappedFinal = finalMatch;
+        if (finalApi) {
+          const savedPred = saved ? (saved[finalApi.id] || saved[finalMatch.id]) : null;
+          const scoreA = savedPred?.scoreA ?? finalMatch.scoreA;
+          const scoreB = savedPred?.scoreB ?? finalMatch.scoreB;
+          mappedFinal = {
+            ...finalMatch,
+            apiId: finalApi.id,
+            scoreA,
+            scoreB,
+            actualScoreA: finalApi.actualScoreA,
+            actualScoreB: finalApi.actualScoreB,
+            status: (finalApi.status === 'FT' || finalApi.status === 'Live') ? ('locked' as const) : finalMatch.status,
+            date: finalApi.date,
+          };
+        }
 
         updateProgression(mappedR32, mappedR16, mappedQF, mappedSF, mappedFinal);
         
@@ -764,7 +767,7 @@ function App() {
     };
     loadFixtures();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authLoading, currentUser]);
 
   useEffect(() => {
     const pollLiveScores = async () => {
