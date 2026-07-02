@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { MatchCard } from './components/MatchCard';
 import type { Team } from './components/MatchCard';
-import { apiService, formatMatchDate } from './services/api';
+import { apiService, formatMatchDate, updateNameFixes } from './services/api';
 import { authService } from './services/firebase';
 import type { AuthUser } from './services/firebase';
 
@@ -630,6 +630,16 @@ function App() {
     setSfMatches(nextSF);
     setFinalMatch(nextFinal);
   };
+
+  useEffect(() => {
+    const initNameFixes = async () => {
+      const fixes = await authService.loadNameFixes();
+      if (fixes && Object.keys(fixes).length > 0) {
+        updateNameFixes(fixes);
+      }
+    };
+    initNameFixes();
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;

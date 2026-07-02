@@ -187,12 +187,16 @@ async function fetchApiData(): Promise<{ games: any[] } | null> {
 // This dictionary allows us to intercept the raw API data and forcefully correct specific matches before they hit the UI.
 const MATCH_OVERRIDES: Record<string, { home_team_name_en?: string; away_team_name_en?: string; home_team_id?: string; away_team_id?: string }> = {};
 
+let nameFixes: Record<string, string> = {
+  'Hri Kin': 'Harry Kane'
+};
+
+export function updateNameFixes(fixes: Record<string, string>) {
+  nameFixes = { ...nameFixes, ...fixes };
+}
+
 function parseScorers(str?: string | null): string[] {
   if (!str || str === 'null' || str === '{}') return [];
-  
-  const nameFixes: Record<string, string> = {
-    'Hri Kin': 'Harry Kane'
-  };
 
   const applyFixes = (arr: string[]) => arr.map(name => {
     let fixed = name;

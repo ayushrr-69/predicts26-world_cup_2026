@@ -543,5 +543,21 @@ export const authService = {
       // Return unsubscriber dummy
       return () => {};
     }
+  },
+
+  // Fetch global name fixes to correct API player name typos
+  async loadNameFixes(): Promise<Record<string, string>> {
+    if (isFirebaseConfigured && db) {
+      try {
+        const docRef = doc(db, 'settings', 'nameFixes');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          return docSnap.data() as Record<string, string>;
+        }
+      } catch (error) {
+        console.error('Error loading name fixes:', error);
+      }
+    }
+    return {};
   }
 };
