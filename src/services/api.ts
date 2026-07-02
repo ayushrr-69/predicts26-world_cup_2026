@@ -10,6 +10,8 @@ export interface ApiMatch {
   actualScoreB?: string;
   penaltyScoreA?: string;
   penaltyScoreB?: string;
+  homeScorers?: string[];
+  awayScorers?: string[];
   /** ISO date string, e.g. "2026-06-29" */
   date?: string;
 }
@@ -185,6 +187,18 @@ async function fetchApiData(): Promise<{ games: any[] } | null> {
 // This dictionary allows us to intercept the raw API data and forcefully correct specific matches before they hit the UI.
 const MATCH_OVERRIDES: Record<string, { home_team_name_en?: string; away_team_name_en?: string; home_team_id?: string; away_team_id?: string }> = {};
 
+function parseScorers(str?: string | null): string[] {
+  if (!str || str === 'null' || str === '{}') return [];
+  try {
+    const stripped = str.replace(/^\{/, '').replace(/\}$/, '');
+    if (!stripped) return [];
+    return JSON.parse(`[${stripped}]`);
+  } catch (e) {
+    const matches = str.match(/"([^"]+)"/g);
+    return matches ? matches.map(s => s.replace(/(^"|"$)/g, '')) : [];
+  }
+}
+
 /** Transform a raw API game object → ApiMatch */
 function transformGame(g: any): ApiMatch {
   // Apply manual overrides if they exist for this match
@@ -221,6 +235,8 @@ function transformGame(g: any): ApiMatch {
     actualScoreB: isFinished && g.away_score != null && g.away_score !== 'null' ? String(g.away_score) : undefined,
     penaltyScoreA: isFinished && g.home_penalty_score != null && g.home_penalty_score !== 'null' ? String(g.home_penalty_score) : undefined,
     penaltyScoreB: isFinished && g.away_penalty_score != null && g.away_penalty_score !== 'null' ? String(g.away_penalty_score) : undefined,
+    homeScorers: parseScorers(g.home_scorers),
+    awayScorers: parseScorers(g.away_scorers),
     date: parseLocalDate(g.local_date, String(g.stadium_id)),
   };
 }

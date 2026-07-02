@@ -32,6 +32,8 @@ interface PredictionMatch {
   actualScoreB?: string;
   penaltyScoreA?: string;
   penaltyScoreB?: string;
+  actualHomeScorers?: string[];
+  actualAwayScorers?: string[];
   date?: string;     // ISO date string from API: '2026-06-29'
 }
 
@@ -683,6 +685,8 @@ function App() {
             actualScoreB: m.actualScoreB,
             penaltyScoreA: m.penaltyScoreA,
             penaltyScoreB: m.penaltyScoreB,
+            actualHomeScorers: m.homeScorers,
+            actualAwayScorers: m.awayScorers,
             date: m.date,
           };
         });
@@ -709,6 +713,8 @@ function App() {
             actualScoreB: live.actualScoreB,
             penaltyScoreA: live.penaltyScoreA,
             penaltyScoreB: live.penaltyScoreB,
+            actualHomeScorers: live.homeScorers,
+            actualAwayScorers: live.awayScorers,
             status: (live.status === 'FT' || live.status === 'Live') ? 'locked' as const : m.status,
             date: live.date,
           };
@@ -731,6 +737,8 @@ function App() {
             actualScoreB: live.actualScoreB,
             penaltyScoreA: live.penaltyScoreA,
             penaltyScoreB: live.penaltyScoreB,
+            actualHomeScorers: live.homeScorers,
+            actualAwayScorers: live.awayScorers,
             status: (live.status === 'FT' || live.status === 'Live') ? 'locked' as const : m.status,
             date: live.date,
           };
@@ -753,6 +761,8 @@ function App() {
             actualScoreB: live.actualScoreB,
             penaltyScoreA: live.penaltyScoreA,
             penaltyScoreB: live.penaltyScoreB,
+            actualHomeScorers: live.homeScorers,
+            actualAwayScorers: live.awayScorers,
             status: (live.status === 'FT' || live.status === 'Live') ? 'locked' as const : m.status,
             date: live.date,
           };
@@ -774,6 +784,8 @@ function App() {
             actualScoreB: finalApi.actualScoreB,
             penaltyScoreA: finalApi.penaltyScoreA,
             penaltyScoreB: finalApi.penaltyScoreB,
+            actualHomeScorers: finalApi.homeScorers,
+            actualAwayScorers: finalApi.awayScorers,
             status: (finalApi.status === 'FT' || finalApi.status === 'Live') ? ('locked' as const) : finalMatch.status,
             date: finalApi.date,
           };
@@ -817,6 +829,8 @@ function App() {
                   actualScoreB: live.actualScoreB,
                   penaltyScoreA: live.penaltyScoreA,
                   penaltyScoreB: live.penaltyScoreB,
+                  actualHomeScorers: live.homeScorers,
+                  actualAwayScorers: live.awayScorers,
                   status: (live.status === 'FT' || live.status === 'Live') ? 'locked' : m.status
                 };
               }
@@ -846,6 +860,8 @@ function App() {
                 actualScoreB: live.actualScoreB,
                 penaltyScoreA: live.penaltyScoreA,
                 penaltyScoreB: live.penaltyScoreB,
+                actualHomeScorers: live.homeScorers,
+                actualAwayScorers: live.awayScorers,
                 status: (live.status === 'FT' || live.status === 'Live') ? 'locked' : prev.status
               };
             }
@@ -1037,6 +1053,10 @@ function App() {
       // Show actual API result scores when available, otherwise null
       scoreA: isActuallyFinished ? match.actualScoreA! : null,
       scoreB: isActuallyFinished ? match.actualScoreB! : null,
+      penaltyScoreA: isActuallyFinished ? match.penaltyScoreA : null,
+      penaltyScoreB: isActuallyFinished ? match.penaltyScoreB : null,
+      actualHomeScorers: match.actualHomeScorers,
+      actualAwayScorers: match.actualAwayScorers,
       index,
       note: isActuallyFinished
         ? 'Final score'
@@ -2209,7 +2229,7 @@ function App() {
                   return (
                     <article
                       key={match.id}
-                      className={`border-2 border-slate-950 rounded-2xl p-4 md:p-5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-transform hover:translate-y-[-1px] ${isTbd ? 'bg-slate-50/80' : 'bg-white'}`}
+                      className={`group relative border-2 border-slate-950 rounded-2xl p-4 md:p-5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 hover:scale-105 hover:z-50 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] active:scale-105 active:z-50 active:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] ${isTbd ? 'bg-slate-50/80' : 'bg-white'}`}
                     >
                       {/* Header row: round badge + date + status */}
                       <div className="flex items-start justify-between gap-3 mb-4">
@@ -2261,12 +2281,19 @@ function App() {
                         </div>
 
                         {/* Score / VS box */}
-                        <div className={`px-3 py-2 rounded-xl border-2 border-slate-950 min-w-20 text-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${isFinished ? 'bg-slate-950 text-white' : isUpcoming ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-400'}`}>
+                        <div className={`px-3 py-2 rounded-xl border-2 border-slate-950 min-w-20 text-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-center ${isFinished ? 'bg-slate-950 text-white' : isUpcoming ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-400'}`}>
                           {isFinished && match.scoreA !== null && match.scoreB !== null ? (
-                            <div className="flex items-center justify-center gap-2">
-                              <span className="font-mono font-black text-base md:text-lg">{match.scoreA}</span>
-                              <span className="font-sans font-black text-xs uppercase tracking-widest text-slate-300">-</span>
-                              <span className="font-mono font-black text-base md:text-lg">{match.scoreB}</span>
+                            <div className="flex flex-col items-center justify-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <span className="font-mono font-black text-base md:text-lg">{match.scoreA}</span>
+                                <span className="font-sans font-black text-xs uppercase tracking-widest text-slate-300">-</span>
+                                <span className="font-mono font-black text-base md:text-lg">{match.scoreB}</span>
+                              </div>
+                              {(match.penaltyScoreA !== undefined || match.penaltyScoreB !== undefined) && (
+                                <div className="text-[9px] font-mono font-black text-slate-400 mt-0.5 tracking-wider">
+                                  ({match.penaltyScoreA ?? 0} - {match.penaltyScoreB ?? 0} PEN)
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <span className="font-sans font-black text-xs uppercase tracking-widest">vs</span>
@@ -2289,6 +2316,24 @@ function App() {
                           </span>
                         </div>
                       </div>
+
+                      {/* Hover Pop-out Scorers Section */}
+                      {((match.actualHomeScorers && match.actualHomeScorers.length > 0) || (match.actualAwayScorers && match.actualAwayScorers.length > 0)) && (
+                        <div className="max-h-0 opacity-0 group-hover:max-h-60 group-hover:opacity-100 group-hover:mt-4 group-hover:pt-3 group-hover:border-t group-hover:border-slate-100 transition-all duration-300 ease-out overflow-hidden flex flex-col w-full">
+                          <div className="flex justify-between items-start text-xs font-sans font-bold text-slate-500 leading-tight">
+                            <div className="flex flex-col gap-1 items-start max-w-[48%] text-left">
+                              {match.actualHomeScorers?.map((s: string, i: number) => (
+                                <span key={i} className="truncate w-full">{s}</span>
+                              ))}
+                            </div>
+                            <div className="flex flex-col gap-1 items-end max-w-[48%] text-right">
+                              {match.actualAwayScorers?.map((s: string, i: number) => (
+                                <span key={i} className="truncate w-full">{s}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Footer */}
                       <div className="mt-4 pt-3 border-t-2 border-slate-100 flex items-center justify-between gap-3">
