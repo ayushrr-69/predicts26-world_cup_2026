@@ -30,6 +30,8 @@ interface PredictionMatch {
   status: 'locked' | 'open' | 'correct' | 'incorrect';
   actualScoreA?: string;
   actualScoreB?: string;
+  penaltyScoreA?: string;
+  penaltyScoreB?: string;
   date?: string;     // ISO date string from API: '2026-06-29'
 }
 
@@ -206,13 +208,23 @@ function App() {
 
 
 
-  const getMatchWinner = (match: { teamA: Team | null, teamB: Team | null, actualScoreA?: string, actualScoreB?: string }): Team | null => {
+  const getMatchWinner = (match: { teamA: Team | null, teamB: Team | null, actualScoreA?: string, actualScoreB?: string, penaltyScoreA?: string, penaltyScoreB?: string }): Team | null => {
     if (!match.teamA || !match.teamB) return null;
     if (match.actualScoreA !== undefined && match.actualScoreB !== undefined) {
       const actA = parseInt(match.actualScoreA);
       const actB = parseInt(match.actualScoreB);
       if (!isNaN(actA) && !isNaN(actB)) {
-        return actA > actB ? match.teamA : actB > actA ? match.teamB : match.teamA;
+        if (actA > actB) return match.teamA;
+        if (actB > actA) return match.teamB;
+        if (match.penaltyScoreA !== undefined && match.penaltyScoreB !== undefined) {
+          const penA = parseInt(match.penaltyScoreA);
+          const penB = parseInt(match.penaltyScoreB);
+          if (!isNaN(penA) && !isNaN(penB)) {
+            if (penA > penB) return match.teamA;
+            if (penB > penA) return match.teamB;
+          }
+        }
+        return match.teamA;
       }
     }
     return null;
@@ -669,6 +681,8 @@ function App() {
             status,
             actualScoreA: m.actualScoreA,
             actualScoreB: m.actualScoreB,
+            penaltyScoreA: m.penaltyScoreA,
+            penaltyScoreB: m.penaltyScoreB,
             date: m.date,
           };
         });
@@ -693,6 +707,8 @@ function App() {
             scoreB,
             actualScoreA: live.actualScoreA,
             actualScoreB: live.actualScoreB,
+            penaltyScoreA: live.penaltyScoreA,
+            penaltyScoreB: live.penaltyScoreB,
             status: (live.status === 'FT' || live.status === 'Live') ? 'locked' as const : m.status,
             date: live.date,
           };
@@ -713,6 +729,8 @@ function App() {
             scoreB,
             actualScoreA: live.actualScoreA,
             actualScoreB: live.actualScoreB,
+            penaltyScoreA: live.penaltyScoreA,
+            penaltyScoreB: live.penaltyScoreB,
             status: (live.status === 'FT' || live.status === 'Live') ? 'locked' as const : m.status,
             date: live.date,
           };
@@ -733,6 +751,8 @@ function App() {
             scoreB,
             actualScoreA: live.actualScoreA,
             actualScoreB: live.actualScoreB,
+            penaltyScoreA: live.penaltyScoreA,
+            penaltyScoreB: live.penaltyScoreB,
             status: (live.status === 'FT' || live.status === 'Live') ? 'locked' as const : m.status,
             date: live.date,
           };
@@ -752,6 +772,8 @@ function App() {
             scoreB,
             actualScoreA: finalApi.actualScoreA,
             actualScoreB: finalApi.actualScoreB,
+            penaltyScoreA: finalApi.penaltyScoreA,
+            penaltyScoreB: finalApi.penaltyScoreB,
             status: (finalApi.status === 'FT' || finalApi.status === 'Live') ? ('locked' as const) : finalMatch.status,
             date: finalApi.date,
           };
@@ -782,7 +804,7 @@ function App() {
             if (live) {
               const teamAChanged = live.teamA?.code !== m.teamA?.code;
               const teamBChanged = live.teamB?.code !== m.teamB?.code;
-              const scoresChanged = live.actualScoreA !== m.actualScoreA || live.actualScoreB !== m.actualScoreB;
+              const scoresChanged = live.actualScoreA !== m.actualScoreA || live.actualScoreB !== m.actualScoreB || live.penaltyScoreA !== m.penaltyScoreA || live.penaltyScoreB !== m.penaltyScoreB;
               const statusChanged = (live.status === 'FT' || live.status === 'Live') && m.status !== 'locked';
 
               if (teamAChanged || teamBChanged || scoresChanged || statusChanged) {
@@ -793,6 +815,8 @@ function App() {
                   teamB: live.teamB || m.teamB,
                   actualScoreA: live.actualScoreA,
                   actualScoreB: live.actualScoreB,
+                  penaltyScoreA: live.penaltyScoreA,
+                  penaltyScoreB: live.penaltyScoreB,
                   status: (live.status === 'FT' || live.status === 'Live') ? 'locked' : m.status
                 };
               }
@@ -809,7 +833,7 @@ function App() {
         setFinalMatch(prev => {
           const live = liveUpdates[prev.apiId || ''];
           if (live) {
-            const scoresChanged = live.actualScoreA !== prev.actualScoreA || live.actualScoreB !== prev.actualScoreB;
+            const scoresChanged = live.actualScoreA !== prev.actualScoreA || live.actualScoreB !== prev.actualScoreB || live.penaltyScoreA !== prev.penaltyScoreA || live.penaltyScoreB !== prev.penaltyScoreB;
             const statusChanged = (live.status === 'FT' || live.status === 'Live') && prev.status !== 'locked';
             const teamAChanged = live.teamA?.code !== prev.teamA?.code;
             const teamBChanged = live.teamB?.code !== prev.teamB?.code;
@@ -820,6 +844,8 @@ function App() {
                 teamB: live.teamB || prev.teamB,
                 actualScoreA: live.actualScoreA,
                 actualScoreB: live.actualScoreB,
+                penaltyScoreA: live.penaltyScoreA,
+                penaltyScoreB: live.penaltyScoreB,
                 status: (live.status === 'FT' || live.status === 'Live') ? 'locked' : prev.status
               };
             }

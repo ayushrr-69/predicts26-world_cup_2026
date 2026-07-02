@@ -8,6 +8,8 @@ export interface ApiMatch {
   status: 'FT' | 'Live' | 'Upcoming' | 'TBD';
   actualScoreA?: string;
   actualScoreB?: string;
+  penaltyScoreA?: string;
+  penaltyScoreB?: string;
   /** ISO date string, e.g. "2026-06-29" */
   date?: string;
 }
@@ -215,8 +217,10 @@ function transformGame(g: any): ApiMatch {
     teamA,
     teamB,
     status,
-    actualScoreA: isFinished && g.home_score != null ? String(g.home_score) : undefined,
-    actualScoreB: isFinished && g.away_score != null ? String(g.away_score) : undefined,
+    actualScoreA: isFinished && g.home_score != null && g.home_score !== 'null' ? String(g.home_score) : undefined,
+    actualScoreB: isFinished && g.away_score != null && g.away_score !== 'null' ? String(g.away_score) : undefined,
+    penaltyScoreA: isFinished && g.home_penalty_score != null && g.home_penalty_score !== 'null' ? String(g.home_penalty_score) : undefined,
+    penaltyScoreB: isFinished && g.away_penalty_score != null && g.away_penalty_score !== 'null' ? String(g.away_penalty_score) : undefined,
     date: parseLocalDate(g.local_date, String(g.stadium_id)),
   };
 }
