@@ -2266,7 +2266,7 @@ function App() {
                       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                         {/* Team A */}
                         <div className="flex items-center gap-3 min-w-0 justify-end">
-                          <span className={`block min-w-0 whitespace-nowrap font-sans font-extrabold text-sm md:text-base leading-none tracking-tight text-right ${isTbd ? 'text-slate-400 italic' : 'text-slate-900'}`}>
+                          <span className={`block min-w-0 truncate font-sans font-extrabold text-sm md:text-base leading-none tracking-tight text-right ${isTbd ? 'text-slate-400 italic' : 'text-slate-900'}`}>
                             {match.teamA}
                           </span>
                           {match.flagA ? (
@@ -2311,7 +2311,7 @@ function App() {
                           ) : (
                             <span className="w-[22px] h-[16px] bg-slate-50 border-2 border-slate-300 border-dashed rounded-sm flex-shrink-0" />
                           )}
-                          <span className={`block min-w-0 whitespace-nowrap font-sans font-extrabold text-sm md:text-base leading-none tracking-tight ${isTbd ? 'text-slate-400 italic' : 'text-slate-900'}`}>
+                          <span className={`block min-w-0 truncate font-sans font-extrabold text-sm md:text-base leading-none tracking-tight ${isTbd ? 'text-slate-400 italic' : 'text-slate-900'}`}>
                             {match.teamB}
                           </span>
                         </div>

@@ -189,13 +189,28 @@ const MATCH_OVERRIDES: Record<string, { home_team_name_en?: string; away_team_na
 
 function parseScorers(str?: string | null): string[] {
   if (!str || str === 'null' || str === '{}') return [];
+  
+  const nameFixes: Record<string, string> = {
+    'Hri Kin': 'Harry Kane'
+  };
+
+  const applyFixes = (arr: string[]) => arr.map(name => {
+    let fixed = name;
+    for (const [bad, good] of Object.entries(nameFixes)) {
+      if (fixed.includes(bad)) {
+        fixed = fixed.replace(bad, good);
+      }
+    }
+    return fixed;
+  });
+
   try {
     const stripped = str.replace(/^\{/, '').replace(/\}$/, '');
     if (!stripped) return [];
-    return JSON.parse(`[${stripped}]`);
+    return applyFixes(JSON.parse(`[${stripped}]`));
   } catch (e) {
     const matches = str.match(/"([^"]+)"/g);
-    return matches ? matches.map(s => s.replace(/(^"|"$)/g, '')) : [];
+    return matches ? applyFixes(matches.map(s => s.replace(/(^"|"$)/g, ''))) : [];
   }
 }
 
