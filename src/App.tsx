@@ -20,6 +20,15 @@ import { apiService, formatMatchDate, updateNameFixes } from './services/api';
 import { authService } from './services/firebase';
 import type { AuthUser } from './services/firebase';
 
+export const SCORING_SCHEME: Record<string, { winner: number, exact: number, sole: number }> = {
+  'R32': { winner: 1, exact: 3, sole: 1 },
+  'R16': { winner: 2, exact: 5, sole: 2 },
+  'QF': { winner: 3, exact: 7, sole: 3 },
+  'SF': { winner: 4, exact: 9, sole: 4 },
+  'Third': { winner: 3, exact: 7, sole: 3 },
+  'Final': { winner: 5, exact: 12, sole: 5 },
+};
+
 interface PredictionMatch {
   id: string;        // bracket position id: m1-m16, r16_1-r16_8, etc.
   apiId?: string;    // real API match id for polling (e.g. '73', '74')
@@ -232,7 +241,7 @@ function App() {
     return null;
   };
 
-  const getMatchPoints = (matchId: string, scoreA: string, scoreB: string, actualScoreA?: string, actualScoreB?: string, username?: string | null): number | null => {
+  const getMatchPoints = (matchId: string, round: string, scoreA: string, scoreB: string, actualScoreA?: string, actualScoreB?: string, username?: string | null): number | null => {
     if (scoreA === '' || scoreB === '') return null;
     if (actualScoreA === undefined || actualScoreB === undefined) return null;
     
@@ -243,6 +252,8 @@ function App() {
     const actA = parseInt(actualScoreA);
     const actB = parseInt(actualScoreB);
     if (isNaN(actA) || isNaN(actB)) return null;
+
+    const scheme = SCORING_SCHEME[round] || { winner: 1, exact: 3, sole: 1 };
 
     if (predA === actA && predB === actB) {
       const membersList = activeLeagueMembers;
@@ -261,16 +272,16 @@ function App() {
           }
         }
         if (!anyoneElseExact) {
-          return 4;
+          return scheme.exact + scheme.sole;
         }
       }
-      return 3;
+      return scheme.exact;
     }
 
     const predWinner = predA > predB ? 'A' : predB > predA ? 'B' : 'Draw';
     const actWinner = actA > actB ? 'A' : actB > actA ? 'B' : 'Draw';
     if (predWinner === actWinner && predWinner !== 'Draw') {
-      return 1;
+      return scheme.winner;
     }
 
     return 0;
@@ -511,17 +522,34 @@ function App() {
                     }
                   }
                   
+                  let roundCode = 'R32';
+                  if (matchId.startsWith('r16')) roundCode = 'R16';
+                  else if (matchId.startsWith('qf')) roundCode = 'QF';
+                  else if (matchId.startsWith('sf')) roundCode = 'SF';
+                  else if (matchId === 'final') roundCode = 'Final';
+                  else if (matchId === 'third') roundCode = 'Third';
+
+                  const scheme = SCORING_SCHEME[roundCode] || { winner: 1, exact: 3, sole: 1 };
+
                   if (selectedLeague && !anyoneElseExact) {
-                    pts += 4;
+                    pts += (scheme.exact + scheme.sole);
                   } else {
-                    pts += 3;
+                    pts += scheme.exact;
                   }
                   exact++;
                 } else {
                   const actWin = actA > actB ? 'A' : actB > actA ? 'B' : 'D';
                   const predWin = predA > predB ? 'A' : predB > predA ? 'B' : 'D';
                   if (actWin === predWin && actWin !== 'D') {
-                    pts += 1;
+                    let roundCode = 'R32';
+                    if (matchId.startsWith('r16')) roundCode = 'R16';
+                    else if (matchId.startsWith('qf')) roundCode = 'QF';
+                    else if (matchId.startsWith('sf')) roundCode = 'SF';
+                    else if (matchId === 'final') roundCode = 'Final';
+                    else if (matchId === 'third') roundCode = 'Third';
+                    
+                    const scheme = SCORING_SCHEME[roundCode] || { winner: 1, exact: 3, sole: 1 };
+                    pts += scheme.winner;
                     correctOutcome++;
                   }
                 }
@@ -2062,6 +2090,7 @@ function App() {
                     <MatchCard
                       key={match.id}
                       id={match.id}
+                      round="R32"
                       teamA={match.teamA}
                       teamB={match.teamB}
                       scoreA={match.scoreA}
@@ -2069,7 +2098,7 @@ function App() {
                       status={getMatchLockState(match.date).locked ? 'locked' : match.status}
                       actualScoreA={match.actualScoreA}
                       actualScoreB={match.actualScoreB}
-                      pointsEarned={getMatchPoints(match.id, match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
+                      pointsEarned={getMatchPoints(match.id, 'R32', match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
 
                       onScoreLock={handleScoreLock}
                       connectorType={idx % 2 === 0 ? 'top' : 'bottom'}
@@ -2089,6 +2118,7 @@ function App() {
                     <MatchCard
                       key={match.id}
                       id={match.id}
+                      round="R16"
                       teamA={match.teamA}
                       teamB={match.teamB}
                       scoreA={match.scoreA}
@@ -2096,7 +2126,7 @@ function App() {
                       status={getMatchLockState(match.date).locked ? 'locked' : match.status}
                       actualScoreA={match.actualScoreA}
                       actualScoreB={match.actualScoreB}
-                      pointsEarned={getMatchPoints(match.id, match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
+                      pointsEarned={getMatchPoints(match.id, 'R16', match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
                       onScoreLock={handleScoreLock}
                       connectorType={idx % 2 === 0 ? 'top' : 'bottom'}
                       hasConnectorLine={idx % 2 === 0}
@@ -2115,6 +2145,7 @@ function App() {
                     <MatchCard
                       key={match.id}
                       id={match.id}
+                      round="QF"
                       teamA={match.teamA}
                       teamB={match.teamB}
                       scoreA={match.scoreA}
@@ -2122,7 +2153,7 @@ function App() {
                       status={getMatchLockState(match.date).locked ? 'locked' : match.status}
                       actualScoreA={match.actualScoreA}
                       actualScoreB={match.actualScoreB}
-                      pointsEarned={getMatchPoints(match.id, match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
+                      pointsEarned={getMatchPoints(match.id, 'QF', match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
                       onScoreLock={handleScoreLock}
                       connectorType={idx % 2 === 0 ? 'top' : 'bottom'}
                       hasConnectorLine={idx % 2 === 0}
@@ -2141,6 +2172,7 @@ function App() {
                     <MatchCard
                       key={match.id}
                       id={match.id}
+                      round="SF"
                       teamA={match.teamA}
                       teamB={match.teamB}
                       scoreA={match.scoreA}
@@ -2148,7 +2180,7 @@ function App() {
                       status={getMatchLockState(match.date).locked ? 'locked' : match.status}
                       actualScoreA={match.actualScoreA}
                       actualScoreB={match.actualScoreB}
-                      pointsEarned={getMatchPoints(match.id, match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
+                      pointsEarned={getMatchPoints(match.id, 'SF', match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
                       onScoreLock={handleScoreLock}
                       connectorType={idx % 2 === 0 ? 'top' : 'bottom'}
                       hasConnectorLine={idx % 2 === 0}
@@ -2166,6 +2198,7 @@ function App() {
                   <div className="w-full">
                     <MatchCard
                       id={viewedBracket.fn.id}
+                      round="Final"
                       teamA={viewedBracket.fn.teamA}
                       teamB={viewedBracket.fn.teamB}
                       scoreA={viewedBracket.fn.scoreA}
@@ -2173,7 +2206,7 @@ function App() {
                       status={getMatchLockState(viewedBracket.fn.date).locked ? 'locked' : viewedBracket.fn.status}
                       actualScoreA={viewedBracket.fn.actualScoreA}
                       actualScoreB={viewedBracket.fn.actualScoreB}
-                      pointsEarned={getMatchPoints(viewedBracket.fn.id, viewedBracket.fn.scoreA, viewedBracket.fn.scoreB, viewedBracket.fn.actualScoreA, viewedBracket.fn.actualScoreB, viewingBracketUser)}
+                      pointsEarned={getMatchPoints(viewedBracket.fn.id, 'Final', viewedBracket.fn.scoreA, viewedBracket.fn.scoreB, viewedBracket.fn.actualScoreA, viewedBracket.fn.actualScoreB, viewingBracketUser)}
                       onScoreLock={handleScoreLock}
                       connectorType="none"
                       isReadOnly={viewingBracketUser !== null}
@@ -2809,7 +2842,7 @@ function App() {
           <div className="bg-white rounded-2xl border-2 border-slate-950 p-6 md:p-8 flex flex-col gap-8 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] min-h-[500px] text-left">
             <div className="pb-6 border-b-2 border-slate-950">
               <h2 className="font-sans font-black text-2xl text-slate-900 uppercase tracking-tight">Scoring Rules</h2>
-              <p className="text-sm font-semibold text-slate-500 mt-1 max-w-2xl leading-relaxed">Points are awarded based on prediction accuracy and are uniform across all rounds of the tournament.</p>
+              <p className="text-sm font-semibold text-slate-500 mt-1 max-w-2xl leading-relaxed">Points are awarded based on prediction accuracy and scale up as the tournament progresses (R16, Quarter-Finals, Semi-Finals, and Final).</p>
             </div>
 
             {/* MatchCard Visual States Demo */}
@@ -2858,7 +2891,7 @@ function App() {
                 </div>
                 <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-4">Predict the correct winner or result (excluding ties if clear winner is required) to earn baseline points.</p>
                 <div className="bg-white border-2 border-slate-950 rounded-lg py-3 px-4 text-center mt-auto shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                  <div className="font-sans font-black text-base text-slate-900 uppercase tracking-wider">1 Point</div>
+                  <div className="font-sans font-black text-base text-slate-900 uppercase tracking-wider">1 - 5 Points</div>
                 </div>
               </div>
 
@@ -2872,7 +2905,7 @@ function App() {
                 </div>
                 <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-4">Correctly predict the exact scoreline of both teams at the end of the match.</p>
                 <div className="bg-amber-400 border-2 border-slate-950 rounded-lg py-3 px-4 text-center mt-auto shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-amber-300 transition-colors">
-                  <div className="font-sans font-black text-base text-slate-950 uppercase tracking-wider">3 Points</div>
+                  <div className="font-sans font-black text-base text-slate-950 uppercase tracking-wider">3 - 12 Points</div>
                 </div>
               </div>
 
@@ -2886,7 +2919,59 @@ function App() {
                 </div>
                 <p className="text-xs font-semibold text-slate-500 leading-relaxed mb-4">Earn a special bonus if you are the only predictor in your league to call the exact scoreline.</p>
                 <div className="bg-emerald-400 border-2 border-slate-950 rounded-lg py-3 px-4 text-center mt-auto shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-emerald-300 transition-colors">
-                  <div className="font-sans font-black text-base text-slate-950 uppercase tracking-wider">+1 Bonus Point</div>
+                  <div className="font-sans font-black text-base text-slate-950 uppercase tracking-wider">+1 to +5 Bonus</div>
+                </div>
+              </div>
+
+              {/* Scaling Points Table */}
+              <div className="border-2 border-slate-950 rounded-xl p-6 md:p-8 bg-white flex flex-col gap-4 lg:col-span-3 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] mt-2">
+                <div className="flex items-center gap-3 mb-2 pb-4 border-b-2 border-slate-200">
+                  <Trophy className="w-6 h-6 text-slate-950 stroke-[2.5] flex-shrink-0" />
+                  <h3 className="font-sans font-black text-lg text-slate-900 uppercase tracking-tight">Points By Stage</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm font-semibold text-slate-700 min-w-[500px]">
+                    <thead>
+                      <tr className="border-b-2 border-slate-950 bg-slate-100 uppercase tracking-wider text-xs">
+                        <th className="px-4 py-3 font-black text-slate-900 rounded-tl-lg">Stage</th>
+                        <th className="px-4 py-3 font-black text-slate-900">Correct Winner</th>
+                        <th className="px-4 py-3 font-black text-slate-900">Exact Result</th>
+                        <th className="px-4 py-3 font-black text-slate-900 rounded-tr-lg">Sole Predictor</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 font-bold text-slate-900">Round of 32</td>
+                        <td className="px-4 py-3">1 pt</td>
+                        <td className="px-4 py-3">3 pts</td>
+                        <td className="px-4 py-3 text-emerald-600">+1 pt bonus</td>
+                      </tr>
+                      <tr className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 font-bold text-slate-900">Round of 16</td>
+                        <td className="px-4 py-3">2 pts</td>
+                        <td className="px-4 py-3">5 pts</td>
+                        <td className="px-4 py-3 text-emerald-600">+2 pts bonus</td>
+                      </tr>
+                      <tr className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 font-bold text-slate-900">Quarter-Finals & Third Place</td>
+                        <td className="px-4 py-3">3 pts</td>
+                        <td className="px-4 py-3">7 pts</td>
+                        <td className="px-4 py-3 text-emerald-600">+3 pts bonus</td>
+                      </tr>
+                      <tr className="border-b border-slate-200 hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 font-bold text-slate-900">Semi-Finals</td>
+                        <td className="px-4 py-3">4 pts</td>
+                        <td className="px-4 py-3">9 pts</td>
+                        <td className="px-4 py-3 text-emerald-600">+4 pts bonus</td>
+                      </tr>
+                      <tr className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 font-bold text-slate-900 rounded-bl-lg">Final</td>
+                        <td className="px-4 py-3 font-black text-fuchsia-600">5 pts</td>
+                        <td className="px-4 py-3 font-black text-fuchsia-600">12 pts</td>
+                        <td className="px-4 py-3 font-black text-fuchsia-600 rounded-br-lg">+5 pts bonus</td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
 

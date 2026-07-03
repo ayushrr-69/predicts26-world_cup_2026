@@ -9,6 +9,7 @@ export interface Team {
 
 export interface MatchCardProps {
   id: string | number;
+  round?: string;
   teamA: Team | null;
   teamB: Team | null;
   scoreA: string;
@@ -54,6 +55,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   connectorHeight,
   pointsEarned,
   isReadOnly = false,
+  round = 'R32',
 }) => {
   const [localScoreA, setLocalScoreA] = React.useState(scoreA);
   const [localScoreB, setLocalScoreB] = React.useState(scoreB);
@@ -72,23 +74,33 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   let borderClass = 'border-slate-950';
   let badgeColorClass = 'text-slate-500 bg-slate-100 border-slate-200';
   
+  // NOTE: importing SCORING_SCHEME dynamically here to avoid circular dep just for coloring
+  const scheme = { winner: 1, exact: 3, sole: 1 };
+  if (round === 'R16') { scheme.winner = 2; scheme.exact = 5; scheme.sole = 2; }
+  else if (round === 'QF') { scheme.winner = 3; scheme.exact = 7; scheme.sole = 3; }
+  else if (round === 'SF' || round === 'Third') { scheme.winner = 4; scheme.exact = 9; scheme.sole = 4; }
+  else if (round === 'Final') { scheme.winner = 5; scheme.exact = 12; scheme.sole = 5; }
+
   if (pointsEarned !== undefined && pointsEarned !== null) {
     if (pointsEarned === 0) {
       // Wrong prediction (0 points)
       borderClass = 'border-red-600 shadow-[2px_2px_0px_0px_rgba(220,38,38,1)]';
       badgeColorClass = 'text-red-700 bg-red-50 border-red-200';
-    } else if (pointsEarned === 1) {
-      // Correct winner (+1 point)
+    } else if (pointsEarned === scheme.winner) {
+      // Correct winner
       borderClass = 'border-yellow-500 shadow-[2px_2px_0px_0px_rgba(234,179,8,1)]';
       badgeColorClass = 'text-yellow-700 bg-yellow-50 border-yellow-200';
-    } else if (pointsEarned === 3) {
-      // Correct winner & score (+3 points)
+    } else if (pointsEarned === scheme.exact) {
+      // Correct winner & score
       borderClass = 'border-emerald-500 shadow-[2px_2px_0px_0px_rgba(16,185,129,1)]';
       badgeColorClass = 'text-emerald-700 bg-emerald-50 border-emerald-200';
-    } else if (pointsEarned === 4) {
-      // Correct winner & score + Bonus (+4 points)
+    } else if (pointsEarned === (scheme.exact + scheme.sole)) {
+      // Correct winner & score + Bonus
       borderClass = 'border-fuchsia-600 shadow-[2px_2px_0px_0px_rgba(192,38,211,1)]';
       badgeColorClass = 'text-fuchsia-700 bg-fuchsia-50 border-fuchsia-200';
+    } else {
+      borderClass = 'border-emerald-500 shadow-[2px_2px_0px_0px_rgba(16,185,129,1)]';
+      badgeColorClass = 'text-emerald-700 bg-emerald-50 border-emerald-200';
     }
   } else {
     // Fallback to legacy status styling for points not calculated yet
@@ -128,20 +140,20 @@ export const MatchCard: React.FC<MatchCardProps> = ({
     if (isNaN(predA) || isNaN(predB) || isNaN(actA) || isNaN(actB)) return 0;
     
     if (predA === actA && predB === actB) {
-      return 3;
+      return scheme.exact;
     }
     
     const predWinner = predA > predB ? 'A' : predB > predA ? 'B' : 'Draw';
     const actWinner = actA > actB ? 'A' : actB > actA ? 'B' : 'Draw';
     
     if (predWinner === actWinner && predWinner !== 'Draw') {
-      return 1;
+      return scheme.winner;
     }
     
     return 0;
   };
 
-  const points = pointsEarned !== undefined ? pointsEarned : getPointsEarned();
+  const points = pointsEarned !== undefined && pointsEarned !== null ? pointsEarned : getPointsEarned();
 
   const finalConnectorHeight = connectorHeight || 'calc(50% + 12px)';
 
@@ -305,11 +317,11 @@ export const MatchCard: React.FC<MatchCardProps> = ({
 
           {/* Actual score status or user popularity percentage */}
           <div className="flex items-center gap-2 font-sans text-[10px] font-black uppercase tracking-wider">
-            {points !== null && (
+            {points !== null && pointsEarned !== null && pointsEarned !== undefined && (
               <span className={`px-1.5 py-0.5 rounded border-2 font-mono shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] text-[9px] ${
-                points === 4 ? 'bg-fuchsia-400 border-fuchsia-950 text-fuchsia-950 font-black' :
-                points === 3 ? 'bg-emerald-400 border-slate-950 text-slate-950 font-black' :
-                points === 1 ? 'bg-yellow-400 border-slate-950 text-slate-950 font-black' :
+                points === (scheme.exact + scheme.sole) ? 'bg-fuchsia-400 border-fuchsia-950 text-fuchsia-950 font-black' :
+                points === scheme.exact ? 'bg-emerald-400 border-slate-950 text-slate-950 font-black' :
+                points === scheme.winner ? 'bg-yellow-400 border-slate-950 text-slate-950 font-black' :
                 'bg-red-450 border-slate-300 text-slate-500 shadow-none'
               }`}>
                 {points > 0 ? `+${points}` : '0'} PTS
