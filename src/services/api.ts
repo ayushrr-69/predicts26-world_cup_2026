@@ -22,8 +22,7 @@ export interface ApiMatch {
  * can call it without a proxy. allorigins is a backup in case of downtime.
  */
 const API_ENDPOINTS = [
-  { url: 'https://worldcup26.ir/get/games', wrap: false },
-  { url: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://worldcup26.ir/get/games'), wrap: true },
+  { url: 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json', wrap: false },
 ];
 
 // Map English country names (from API) → our internal 3-letter codes
@@ -34,11 +33,13 @@ const NAME_TO_CODE: Record<string, string> = {
   'Czech Republic': 'CZE',
   'Canada': 'CAN',
   'Bosnia and Herzegovina': 'BIH',
+  'Bosnia & Herzegovina': 'BIH',
   'Australia': 'AUS',
   'Turkey': 'TUR',
   'Qatar': 'QAT',
   'Switzerland': 'SUI',
   'United States': 'USA',
+  'USA': 'USA',
   'Paraguay': 'PAR',
   'Germany': 'GER',
   'Curaçao': 'CUW',
@@ -68,6 +69,7 @@ const NAME_TO_CODE: Record<string, string> = {
   'Brazil': 'BRA',
   'Portugal': 'POR',
   'Democratic Republic of the Congo': 'COD',
+  'DR Congo': 'COD',
   'Colombia': 'COL',
   'Uzbekistan': 'UZB',
   'Argentina': 'ARG',
@@ -153,8 +155,8 @@ export function formatMatchDate(dateVal?: string): string {
 }
 
 
-/** Attempt each URL in order; return the first that returns a valid {games:[]} response */
-async function fetchApiData(): Promise<{ games: any[] } | null> {
+/** Attempt each URL in order; return the first that returns a valid response */
+async function fetchApiData(): Promise<any | null> {
   for (const endpoint of API_ENDPOINTS) {
     try {
       const controller = new AbortController();
@@ -176,12 +178,12 @@ async function fetchApiData(): Promise<{ games: any[] } | null> {
         const proxyData = await response.json();
         if (proxyData.contents) {
           const parsed = JSON.parse(proxyData.contents);
-          localStorage.setItem('wc_api_cache', JSON.stringify(parsed));
+          if (typeof window !== 'undefined') localStorage.setItem('wc_api_cache', JSON.stringify(parsed));
           return parsed;
         }
       } else {
         const parsed = await response.json();
-        localStorage.setItem('wc_api_cache', JSON.stringify(parsed));
+        if (typeof window !== 'undefined') localStorage.setItem('wc_api_cache', JSON.stringify(parsed));
         return parsed;
       }
     } catch (error) {
@@ -285,6 +287,101 @@ function transformGame(g: any): ApiMatch {
   };
 }
 
+/** Transform an openfootball game object → ApiMatch */
+function transformOpenFootballGame(g: any): ApiMatch {
+  const override = MATCH_OVERRIDES[g.num];
+  if (override) {
+    if (override.home_team_name_en !== undefined) g.team1 = override.home_team_name_en;
+    if (override.away_team_name_en !== undefined) g.team2 = override.away_team_name_en;
+  }
+
+  let roundStr = g.round;
+  let roundCode = 'TBD';
+  if (roundStr === 'Round of 32') roundCode = 'R32';
+  else if (roundStr === 'Round of 16') roundCode = 'R16';
+  else if (roundStr === 'Quarter-final') roundCode = 'QF';
+  else if (roundStr === 'Semi-final') roundCode = 'SF';
+  else if (roundStr === 'Final') roundCode = 'Final';
+  else if (roundStr === 'Match for third place') roundCode = 'Third';
+
+  const isTbdA = typeof g.team1 === 'string' && (g.team1.startsWith('W') || g.team1.startsWith('L'));
+  const isTbdB = typeof g.team2 === 'string' && (g.team2.startsWith('W') || g.team2.startsWith('L'));
+
+  const teamA = !isTbdA ? makeTeam(g.team1) : null;
+  const teamB = !isTbdB ? makeTeam(g.team2) : null;
+
+  const score = g.score || {};
+  let status: ApiMatch['status'] = 'Upcoming';
+  
+  const formatGoals = (goalsArr?: any[]) => {
+    if (!Array.isArray(goalsArr)) return [];
+    return goalsArr.map(goal => {
+       const minStr = String(goal.minute).replace(/'/g, '');
+       return `${goal.name} ${minStr}'`;
+    });
+  };
+
+  const homeScorers = parseScorers(formatGoals(g.goals1));
+  const awayScorers = parseScorers(formatGoals(g.goals2));
+
+  let actualScoreA = undefined;
+  let actualScoreB = undefined;
+  let penaltyScoreA = undefined;
+  let penaltyScoreB = undefined;
+
+  if (score.ft && score.ft.length === 2) {
+    status = 'FT';
+    actualScoreA = String(score.ft[0]);
+    actualScoreB = String(score.ft[1]);
+    
+    if (score.p && score.p.length === 2) {
+      penaltyScoreA = String(score.p[0]);
+      penaltyScoreB = String(score.p[1]);
+    }
+  } else if (!isTbdA && !isTbdB && !teamA && !teamB) {
+    status = 'TBD';
+  } else if (isTbdA || isTbdB) {
+    status = 'TBD';
+  }
+
+  let isoDate = undefined;
+  if (g.date) {
+    if (g.time) {
+      const match = g.time.match(/(\d{1,2}:\d{2})\s+UTC([+-]\d+)/);
+      if (match) {
+        const timePart = match[1];
+        let offset = match[2];
+        if (offset.length === 2 || offset.length === 3) {
+          offset = offset + ':00';
+          if (offset.length === 5) {
+             offset = offset[0] + '0' + offset.substring(1);
+          }
+        }
+        isoDate = `${g.date}T${timePart}:00${offset}`;
+      } else {
+        isoDate = `${g.date}T12:00:00Z`;
+      }
+    } else {
+      isoDate = `${g.date}T12:00:00Z`;
+    }
+  }
+
+  return {
+    id: String(g.num),
+    round: roundCode,
+    teamA,
+    teamB,
+    status,
+    actualScoreA,
+    actualScoreB,
+    penaltyScoreA,
+    penaltyScoreB,
+    homeScorers,
+    awayScorers,
+    date: isoDate,
+  };
+}
+
 export const apiService = {
   /**
    * Fetches all knockout round matches.
@@ -294,7 +391,12 @@ export const apiService = {
     // 1. Try live API
     try {
       const data = await fetchApiData();
-      if (data) {
+      if (data && data.matches) {
+        return data.matches
+          .filter((g: any) => ['Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Final'].includes(g.round))
+          .map(transformOpenFootballGame);
+      } else if (data && data.games) {
+        // Fallback for old cache structure
         return data.games
           .filter((g: any) => ['r32', 'r16', 'qf', 'sf', 'final'].includes(g.type))
           .map(transformGame);
@@ -305,13 +407,19 @@ export const apiService = {
 
     // 2. Fall back to localStorage cache first
     try {
-      const cached = localStorage.getItem('wc_api_cache');
-      if (cached) {
-        const data = JSON.parse(cached);
-        if (data && data.games) {
-          return data.games
-            .filter((g: any) => ['r32', 'r16', 'qf', 'sf', 'final'].includes(g.type))
-            .map(transformGame);
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('wc_api_cache');
+        if (cached) {
+          const data = JSON.parse(cached);
+          if (data && data.matches) {
+            return data.matches
+              .filter((g: any) => ['Round of 32', 'Round of 16', 'Quarter-final', 'Semi-final', 'Final'].includes(g.round))
+              .map(transformOpenFootballGame);
+          } else if (data && data.games) {
+            return data.games
+              .filter((g: any) => ['r32', 'r16', 'qf', 'sf', 'final'].includes(g.type))
+              .map(transformGame);
+          }
         }
       }
     } catch (err) {
