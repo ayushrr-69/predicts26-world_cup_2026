@@ -171,12 +171,21 @@ async function fetchApiData(): Promise<{ games: any[] } | null> {
       });
       clearTimeout(timer);
       if (!response.ok) continue;
-      let json = await response.json();
       // allorigins wraps response in {contents: "<json string>"}
-      if (endpoint.wrap && json?.contents) json = JSON.parse(json.contents);
-      if (json && Array.isArray(json.games)) return json;
-    } catch {
-      // try next endpoint
+      if (endpoint.wrap) {
+        const proxyData = await response.json();
+        if (proxyData.contents) {
+          const parsed = JSON.parse(proxyData.contents);
+          localStorage.setItem('wc_api_cache', JSON.stringify(parsed));
+          return parsed;
+        }
+      } else {
+        const parsed = await response.json();
+        localStorage.setItem('wc_api_cache', JSON.stringify(parsed));
+        return parsed;
+      }
+    } catch (error) {
+      // Ignore and try the next endpoint
     }
   }
   return null;
@@ -294,7 +303,22 @@ export const apiService = {
       console.warn('Live API fetch failed:', err);
     }
 
-    // 2. Fall back to local matches.json
+    // 2. Fall back to localStorage cache first
+    try {
+      const cached = localStorage.getItem('wc_api_cache');
+      if (cached) {
+        const data = JSON.parse(cached);
+        if (data && data.games) {
+          return data.games
+            .filter((g: any) => ['r32', 'r16', 'qf', 'sf', 'final'].includes(g.type))
+            .map(transformGame);
+        }
+      }
+    } catch (err) {
+      console.warn('Cache fallback failed:', err);
+    }
+
+    // 3. Fall back to local matches.json as last resort
     try {
       const res = await fetch('/data/matches.json');
       if (!res.ok) throw new Error('matches.json not found');

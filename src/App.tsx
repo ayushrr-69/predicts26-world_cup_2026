@@ -1020,13 +1020,17 @@ function App() {
       setFinalMatch(nextFinal);
     }
 
-    // Auto-save user predictions to Firestore
+    // Auto-save user prediction to Firestore
     if (currentUser) {
-      const allPredictions: Record<string, { scoreA: string; scoreB: string }> = {};
-      [...nextR32, ...nextR16, ...nextQF, ...nextSF, nextFinal].forEach(m => {
-        allPredictions[m.apiId || m.id] = { scoreA: m.scoreA, scoreB: m.scoreB };
-      });
-      authService.savePredictions(currentUser.uid, allPredictions);
+      const allNext = [...nextR32, ...nextR16, ...nextQF, ...nextSF, nextFinal];
+      const modifiedMatch = allNext.find(m => m.id === id);
+      if (modifiedMatch) {
+        authService.updateSinglePrediction(
+          currentUser.uid, 
+          modifiedMatch.apiId || modifiedMatch.id, 
+          { scoreA: modifiedMatch.scoreA, scoreB: modifiedMatch.scoreB }
+        );
+      }
     }
   };
 

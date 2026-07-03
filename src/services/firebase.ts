@@ -221,6 +221,27 @@ export const authService = {
     localStorage.setItem(`wc_predictions_${userId}`, JSON.stringify(predictions));
   },
 
+  async updateSinglePrediction(userId: string, matchId: string, scores: { scoreA: string; scoreB: string }): Promise<void> {
+    if (isFirebaseConfigured && db) {
+      try {
+        const predictionsRef = doc(db, 'predictions', userId);
+        setDoc(predictionsRef, { 
+          predictions: { [matchId]: scores }, 
+          lastUpdated: new Date() 
+        }, { merge: true }).catch(error => {
+          console.error('Error updating single prediction:', error);
+        });
+      } catch (error) {
+        console.error('Error updating single prediction sync:', error);
+      }
+    }
+    
+    const existing = localStorage.getItem(`wc_predictions_${userId}`);
+    const predictions = existing ? JSON.parse(existing) : {};
+    predictions[matchId] = scores;
+    localStorage.setItem(`wc_predictions_${userId}`, JSON.stringify(predictions));
+  },
+
   // Load predictions map from Firestore (or LocalStorage fallback)
   async loadPredictions(userId: string): Promise<Record<string, { scoreA: string; scoreB: string }> | null> {
     // Read from LocalStorage cache first
