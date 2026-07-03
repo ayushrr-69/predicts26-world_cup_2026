@@ -195,18 +195,34 @@ export function updateNameFixes(fixes: Record<string, string>) {
   nameFixes = { ...nameFixes, ...fixes };
 }
 
-function parseScorers(str?: string | null): string[] {
+function parseScorers(str?: any): string[] {
   if (!str || str === 'null' || str === '{}') return [];
 
-  const applyFixes = (arr: string[]) => arr.map(name => {
-    let fixed = name;
-    for (const [bad, good] of Object.entries(nameFixes)) {
-      if (fixed.includes(bad)) {
-        fixed = fixed.replace(bad, good);
-      }
-    }
-    return fixed;
-  });
+  const applyFixes = (arr: any[]) => {
+    if (!Array.isArray(arr)) return [];
+    
+    return arr
+      .filter(item => item != null && item !== '')
+      .map(item => {
+        let fixed = String(item);
+        if (nameFixes && typeof nameFixes === 'object') {
+          for (const [bad, good] of Object.entries(nameFixes)) {
+            if (fixed.includes(bad)) {
+              fixed = fixed.replace(bad, good);
+            }
+          }
+        }
+        return fixed;
+      });
+  };
+
+  if (Array.isArray(str)) {
+    return applyFixes(str);
+  }
+
+  if (typeof str !== 'string') {
+    return [];
+  }
 
   try {
     const stripped = str.replace(/^\{/, '').replace(/\}$/, '');
