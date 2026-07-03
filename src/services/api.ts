@@ -329,10 +329,13 @@ function transformOpenFootballGame(g: any): ApiMatch {
   let penaltyScoreA = undefined;
   let penaltyScoreB = undefined;
 
-  if (score.ft && score.ft.length === 2) {
+  // Use extra time score (et) if it exists, otherwise use full time score (ft)
+  const finalScore = score.et && score.et.length === 2 ? score.et : score.ft;
+
+  if (finalScore && finalScore.length === 2) {
     status = 'FT';
-    actualScoreA = String(score.ft[0]);
-    actualScoreB = String(score.ft[1]);
+    actualScoreA = String(finalScore[0]);
+    actualScoreB = String(finalScore[1]);
     
     if (score.p && score.p.length === 2) {
       penaltyScoreA = String(score.p[0]);
