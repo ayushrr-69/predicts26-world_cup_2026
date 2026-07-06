@@ -241,7 +241,7 @@ function App() {
     return null;
   };
 
-  const getMatchPoints = (matchId: string, round: string, scoreA: string, scoreB: string, actualScoreA?: string, actualScoreB?: string, username?: string | null): number | null => {
+  const getMatchPoints = (matchId: string, round: string, scoreA: string, scoreB: string, actualScoreA?: string, actualScoreB?: string, userId?: string | null): number | null => {
     if (scoreA === '' || scoreB === '') return null;
     if (actualScoreA === undefined || actualScoreB === undefined) return null;
     
@@ -257,11 +257,11 @@ function App() {
 
     if (predA === actA && predB === actB) {
       const membersList = activeLeagueMembers;
-      const userToCompare = username;
+      const userToCompare = userId;
       if (userToCompare && membersList.length > 0) {
         let anyoneElseExact = false;
         for (const member of membersList) {
-          if (member.name === userToCompare) continue;
+          if (member.uid === userToCompare) continue;
           const mScoreA = getUserScore(matchId, 'A', member.name, member.uid);
           const mScoreB = getUserScore(matchId, 'B', member.name, member.uid);
           const mPredA = parseInt(mScoreA);
@@ -2098,7 +2098,7 @@ function App() {
                       status={getMatchLockState(match.date).locked ? 'locked' : match.status}
                       actualScoreA={match.actualScoreA}
                       actualScoreB={match.actualScoreB}
-                      pointsEarned={getMatchPoints(match.id, 'R32', match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
+                      pointsEarned={getMatchPoints(match.id, 'R32', match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUserId || currentUser?.uid)}
 
                       onScoreLock={handleScoreLock}
                       connectorType={idx % 2 === 0 ? 'top' : 'bottom'}
@@ -2126,7 +2126,7 @@ function App() {
                       status={getMatchLockState(match.date).locked ? 'locked' : match.status}
                       actualScoreA={match.actualScoreA}
                       actualScoreB={match.actualScoreB}
-                      pointsEarned={getMatchPoints(match.id, 'R16', match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
+                      pointsEarned={getMatchPoints(match.id, 'R16', match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUserId || currentUser?.uid)}
                       onScoreLock={handleScoreLock}
                       connectorType={idx % 2 === 0 ? 'top' : 'bottom'}
                       hasConnectorLine={idx % 2 === 0}
@@ -2153,7 +2153,7 @@ function App() {
                       status={getMatchLockState(match.date).locked ? 'locked' : match.status}
                       actualScoreA={match.actualScoreA}
                       actualScoreB={match.actualScoreB}
-                      pointsEarned={getMatchPoints(match.id, 'QF', match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
+                      pointsEarned={getMatchPoints(match.id, 'QF', match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUserId || currentUser?.uid)}
                       onScoreLock={handleScoreLock}
                       connectorType={idx % 2 === 0 ? 'top' : 'bottom'}
                       hasConnectorLine={idx % 2 === 0}
@@ -2180,7 +2180,7 @@ function App() {
                       status={getMatchLockState(match.date).locked ? 'locked' : match.status}
                       actualScoreA={match.actualScoreA}
                       actualScoreB={match.actualScoreB}
-                      pointsEarned={getMatchPoints(match.id, 'SF', match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUser)}
+                      pointsEarned={getMatchPoints(match.id, 'SF', match.scoreA, match.scoreB, match.actualScoreA, match.actualScoreB, viewingBracketUserId || currentUser?.uid)}
                       onScoreLock={handleScoreLock}
                       connectorType={idx % 2 === 0 ? 'top' : 'bottom'}
                       hasConnectorLine={idx % 2 === 0}
@@ -2206,7 +2206,7 @@ function App() {
                       status={getMatchLockState(viewedBracket.fn.date).locked ? 'locked' : viewedBracket.fn.status}
                       actualScoreA={viewedBracket.fn.actualScoreA}
                       actualScoreB={viewedBracket.fn.actualScoreB}
-                      pointsEarned={getMatchPoints(viewedBracket.fn.id, 'Final', viewedBracket.fn.scoreA, viewedBracket.fn.scoreB, viewedBracket.fn.actualScoreA, viewedBracket.fn.actualScoreB, viewingBracketUser)}
+                      pointsEarned={getMatchPoints(viewedBracket.fn.id, 'Final', viewedBracket.fn.scoreA, viewedBracket.fn.scoreB, viewedBracket.fn.actualScoreA, viewedBracket.fn.actualScoreB, viewingBracketUserId || currentUser?.uid)}
                       onScoreLock={handleScoreLock}
                       connectorType="none"
                       isReadOnly={viewingBracketUser !== null}
@@ -3283,3 +3283,4 @@ function App() {
 }
 
 export default App;
+
