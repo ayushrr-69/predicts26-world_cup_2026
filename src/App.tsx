@@ -523,11 +523,11 @@ function App() {
                   }
                   
                   let roundCode = 'R32';
-                  if (matchId.startsWith('r16')) roundCode = 'R16';
-                  else if (matchId.startsWith('qf')) roundCode = 'QF';
-                  else if (matchId.startsWith('sf')) roundCode = 'SF';
-                  else if (matchId === 'final') roundCode = 'Final';
-                  else if (matchId === 'third') roundCode = 'Third';
+                  if (actualMatch.id.startsWith('r16')) roundCode = 'R16';
+                  else if (actualMatch.id.startsWith('qf')) roundCode = 'QF';
+                  else if (actualMatch.id.startsWith('sf')) roundCode = 'SF';
+                  else if (actualMatch.id === 'final') roundCode = 'Final';
+                  else if (actualMatch.id === 'third') roundCode = 'Third';
 
                   const scheme = SCORING_SCHEME[roundCode] || { winner: 1, exact: 3, sole: 1 };
 
@@ -542,11 +542,11 @@ function App() {
                   const predWin = predA > predB ? 'A' : predB > predA ? 'B' : 'D';
                   if (actWin === predWin && actWin !== 'D') {
                     let roundCode = 'R32';
-                    if (matchId.startsWith('r16')) roundCode = 'R16';
-                    else if (matchId.startsWith('qf')) roundCode = 'QF';
-                    else if (matchId.startsWith('sf')) roundCode = 'SF';
-                    else if (matchId === 'final') roundCode = 'Final';
-                    else if (matchId === 'third') roundCode = 'Third';
+                    if (actualMatch.id.startsWith('r16')) roundCode = 'R16';
+                    else if (actualMatch.id.startsWith('qf')) roundCode = 'QF';
+                    else if (actualMatch.id.startsWith('sf')) roundCode = 'SF';
+                    else if (actualMatch.id === 'final') roundCode = 'Final';
+                    else if (actualMatch.id === 'third') roundCode = 'Third';
                     
                     const scheme = SCORING_SCHEME[roundCode] || { winner: 1, exact: 3, sole: 1 };
                     pts += scheme.winner;
