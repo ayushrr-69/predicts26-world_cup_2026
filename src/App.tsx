@@ -219,8 +219,19 @@ function App() {
 
 
 
-  const getMatchWinner = (match: { teamA: Team | null, teamB: Team | null, actualScoreA?: string, actualScoreB?: string, penaltyScoreA?: string, penaltyScoreB?: string }): Team | null => {
+  const getMatchWinner = (match: { teamA: Team | null, teamB: Team | null, scoreA?: string, scoreB?: string, actualScoreA?: string, actualScoreB?: string, penaltyScoreA?: string, penaltyScoreB?: string }): Team | null => {
     if (!match.teamA || !match.teamB) return null;
+    
+    if (match.scoreA !== undefined && match.scoreB !== undefined && match.scoreA !== '' && match.scoreB !== '') {
+      const pA = parseInt(match.scoreA);
+      const pB = parseInt(match.scoreB);
+      if (!isNaN(pA) && !isNaN(pB)) {
+        if (pA > pB) return match.teamA;
+        if (pB > pA) return match.teamB;
+        return match.teamA; // Fallback for draws in predictions
+      }
+    }
+
     if (match.actualScoreA !== undefined && match.actualScoreB !== undefined) {
       const actA = parseInt(match.actualScoreA);
       const actB = parseInt(match.actualScoreB);
@@ -302,11 +313,11 @@ function App() {
       const predA = parseInt(scoreA);
       const predB = parseInt(scoreB);
       if (isNaN(predA) || isNaN(predB)) return 'open';
-      if (actualScoreA === undefined || actualScoreB === undefined) return 'locked';
+      if (actualScoreA === undefined || actualScoreB === undefined) return 'open';
       
       const actA = parseInt(actualScoreA);
       const actB = parseInt(actualScoreB);
-      if (isNaN(actA) || isNaN(actB)) return 'locked';
+      if (isNaN(actA) || isNaN(actB)) return 'open';
       
       const predWinner = predA > predB ? 'A' : predB > predA ? 'B' : 'Draw';
       const actWinner = actA > actB ? 'A' : actB > actA ? 'B' : 'Draw';
@@ -818,6 +829,8 @@ function App() {
             apiId: finalApi.id,
             scoreA,
             scoreB,
+            teamA: finalApi.teamA || finalMatch.teamA,
+            teamB: finalApi.teamB || finalMatch.teamB,
             actualScoreA: finalApi.actualScoreA,
             actualScoreB: finalApi.actualScoreB,
             penaltyScoreA: finalApi.penaltyScoreA,
