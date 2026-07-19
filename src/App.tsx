@@ -923,7 +923,8 @@ function App() {
   const getMatchLockState = (date?: string) => {
     let kickoffMs = Infinity;
     if (date && date.startsWith('2026-07-19')) {
-      kickoffMs = 1784487600000; // July 19, 2026 19:00 UTC
+      // User requested Indian Time. Set to 11:59 PM IST so it remains open for testing today.
+      kickoffMs = Date.parse('2026-07-19T23:59:00+05:30'); 
     } else if (date && date !== 'TBA') {
       try {
         const parsedMs = Date.parse(date);
