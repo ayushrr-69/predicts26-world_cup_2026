@@ -924,7 +924,7 @@ function App() {
     let kickoffMs = Infinity;
     if (date && date.startsWith('2026-07-19')) {
       // User requested Indian Time. Set to 11:59 PM IST so it remains open for testing today.
-      kickoffMs = Date.parse('2026-07-19T23:59:00+05:30'); 
+      kickoffMs = 1784485740000; // Hardcoded milliseconds to avoid Safari Date.parse NaN bugs
     } else if (date && date !== 'TBA') {
       try {
         const parsedMs = Date.parse(date);
