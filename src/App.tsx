@@ -922,11 +922,17 @@ function App() {
   // Get match lock state based on its individual kickoff time
   const getMatchLockState = (date?: string) => {
     let kickoffMs = Infinity;
-    if (date && date !== 'TBA') {
+    if (date === '2026-07-19T15:00:00-04:00' || date === '2026-07-19T15:00:00-4:00' || date === '2026-07-19') {
+      kickoffMs = 1784487600000; // July 19, 2026 19:00 UTC
+    } else if (date && date !== 'TBA') {
       try {
         const parsedMs = Date.parse(date);
         if (!isNaN(parsedMs)) {
           kickoffMs = parsedMs;
+        } else {
+          // Safari fallback for YYYY-MM-DD
+          const simpleParse = Date.parse(date.split('T')[0].replace(/-/g, '/'));
+          if (!isNaN(simpleParse)) kickoffMs = simpleParse;
         }
       } catch {}
     }
