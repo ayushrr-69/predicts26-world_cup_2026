@@ -353,14 +353,12 @@ function transformOpenFootballGame(g: any): ApiMatch {
       const match = g.time.match(/(\d{1,2}:\d{2})\s+UTC([+-]\d+)/);
       if (match) {
         const timePart = match[1];
-        let offset = match[2];
-        if (offset.length === 2 || offset.length === 3) {
-          offset = offset + ':00';
-          if (offset.length === 5) {
-             offset = offset[0] + '0' + offset.substring(1);
-          }
-        }
-        isoDate = `${g.date}T${timePart}:00${offset}`;
+        const offsetPart = match[2];
+        const sign = offsetPart[0];
+        const hours = offsetPart.substring(1);
+        const paddedHours = hours.length === 1 ? `0${hours}` : hours;
+        const paddedOffset = `${sign}${paddedHours}:00`;
+        isoDate = `${g.date}T${timePart}:00${paddedOffset}`;
       } else {
         isoDate = `${g.date}T12:00:00Z`;
       }

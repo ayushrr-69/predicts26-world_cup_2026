@@ -30,6 +30,6 @@
     { "id": "100", "round": "QF", "teamA": null, "teamB": null, "status": "TBD", "date": "2026-07-11" },
     { "id": "101", "round": "SF", "teamA": null, "teamB": null, "status": "TBD", "date": "2026-07-14" },
     { "id": "102", "round": "SF", "teamA": null, "teamB": null, "status": "TBD", "date": "2026-07-15" },
-    { "id": "104", "round": "Final", "teamA": null, "teamB": null, "status": "TBD", "date": "2026-07-19" }
+    { "id": "104", "round": "Final", "teamA": null, "teamB": null, "status": "TBD", "date": "2026-07-19T15:00:00-04:00" }
   ]
 }
