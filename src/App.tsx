@@ -222,16 +222,6 @@ function App() {
   const getMatchWinner = (match: { teamA: Team | null, teamB: Team | null, scoreA?: string, scoreB?: string, actualScoreA?: string, actualScoreB?: string, penaltyScoreA?: string, penaltyScoreB?: string }): Team | null => {
     if (!match.teamA || !match.teamB) return null;
     
-    if (match.scoreA !== undefined && match.scoreB !== undefined && match.scoreA !== '' && match.scoreB !== '') {
-      const pA = parseInt(match.scoreA);
-      const pB = parseInt(match.scoreB);
-      if (!isNaN(pA) && !isNaN(pB)) {
-        if (pA > pB) return match.teamA;
-        if (pB > pA) return match.teamB;
-        return match.teamA; // Fallback for draws in predictions
-      }
-    }
-
     if (match.actualScoreA !== undefined && match.actualScoreB !== undefined) {
       const actA = parseInt(match.actualScoreA);
       const actB = parseInt(match.actualScoreB);
