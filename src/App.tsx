@@ -922,7 +922,7 @@ function App() {
   // Get match lock state based on its individual kickoff time
   const getMatchLockState = (date?: string) => {
     let kickoffMs = Infinity;
-    if (date === '2026-07-19T15:00:00-04:00' || date === '2026-07-19T15:00:00-4:00' || date === '2026-07-19') {
+    if (date && date.startsWith('2026-07-19')) {
       kickoffMs = 1784487600000; // July 19, 2026 19:00 UTC
     } else if (date && date !== 'TBA') {
       try {
